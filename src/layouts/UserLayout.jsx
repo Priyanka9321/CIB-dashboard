@@ -1,14 +1,16 @@
-import { Link, Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import { Outlet } from "react-router-dom";
 
 const UserLayout = () => {
   return (
-    <div>
-      <h2>User Panel</h2>
-      <nav>
-        <Link to="dashboard">Dashboard</Link> |{" "}
-        <Link to="profile">Profile</Link>
-      </nav>
-      <Outlet />
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar fixed on left */}
+      <Sidebar />
+
+      {/* Main content scrollable */}
+      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
+        <Outlet />
+      </div>
     </div>
   );
 };
