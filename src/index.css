@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+
+/* All theme style */
+div{
+  background-color: red;
+}
