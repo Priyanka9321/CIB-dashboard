@@ -1,4 +1,5 @@
 import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar"; 
 import { Outlet } from "react-router-dom";
 
 const UserLayout = () => {
@@ -8,8 +9,11 @@ const UserLayout = () => {
       <Sidebar />
 
       {/* Main content scrollable */}
-      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-        <Outlet />
+      <div className="flex-1 overflow-y-auto bg-gray-100">
+        <Navbar />
+        <div className="p-4">
+          <Outlet />
+        </div>
       </div>
     </div>
   );
