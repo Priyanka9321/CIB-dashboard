@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Shield,
   User,
@@ -7,21 +7,44 @@ import {
   KeyRound,
   UserCircle,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { menuItems } from "../constants/menuItems";
 
 const Navbar = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const location = useLocation();
+
+  // Find active item and get its icon
+  const activeItem = menuItems
+    .flatMap((item) => item.subItems || item)
+    .find((item) => item.to === location.pathname);
+
+  // Find the parent menu item to get the icon
+  const activeParentItem = menuItems.find((item) => {
+    if (item.to === location.pathname) return true;
+    if (item.subItems) {
+      return item.subItems.some((subItem) => subItem.to === location.pathname);
+    }
+    return false;
+  });
+
+  const pageTitle = activeItem?.label || "Crime Investigation Bureau";
+  const pageIcon = activeParentItem?.icon || <Shield size={20} />;
 
   return (
     <header className="bg-white shadow-lg border-b border-blue-100">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side - Logo and Title */}
+        {/* Left - Logo + Active Page Title */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
-            <Shield className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">
-              Crime Investigation Bureau
+          
+          <div className="flex items-center gap-4">
+            {/* Dynamic Icon with gradient background */}
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-800 to-blue-900 rounded flex items-center justify-center text-white">
+              {pageIcon}
+            </div>
+            {/* Page Title with gradient text */}
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-800 to-blue-900 bg-clip-text text-transparent">
+              {pageTitle}
             </h1>
           </div>
         </div>

@@ -29,7 +29,7 @@ const UserRoutes = () => {
       <Route path="update-profile" element={<UpdateProfile />} />
       <Route path="donate" element={<DonationForm />} />
       {/* ✅ New Receipt Sub-Routes */}
-     <Route path="receipt/membership" element={<MembershipReceipt />} />
+      <Route path="receipt/membership" element={<MembershipReceipt />} />
       <Route path="receipt/donation" element={<DonationReceipt />} />
     </Route>
   );

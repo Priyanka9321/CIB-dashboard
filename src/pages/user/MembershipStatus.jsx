@@ -11,13 +11,6 @@ import {
 const MembershipStatus = () => {
   return (
     <div className="min-h-screen p-4">
-      {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-          Membership Status
-        </h1>
-      </div>
-
       {/* Main Card */}
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
