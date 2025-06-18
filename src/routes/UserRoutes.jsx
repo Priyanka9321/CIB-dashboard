@@ -10,7 +10,7 @@ import UpdateProfile from "../pages/user/UpdateProfile";
 import DonationForm from "../pages/user/Donation";
 import MembershipReceipt from "../pages/user/MembershipReceipt";
 import DonationReceipt from "../pages/user/DonationReceipt";
-
+import MembershipRegistrationForm from "../pages/user/MembershipRegistrationForm"
 const UserRoutes = () => {
   return (
     <Route
@@ -24,6 +24,7 @@ const UserRoutes = () => {
       <Route path="dashboard" element={<UserDashboard />} />
       <Route path="profile" element={<Profile />} />
       <Route path="membership" element={<MembershipStatus />} />
+       <Route path="apply-membership" element={<MembershipRegistrationForm />} />
       <Route path="idcard" element={<GenerateIdCard />} />
       <Route path="certificate" element={<Certificate />} />
       <Route path="update-profile" element={<UpdateProfile />} />
