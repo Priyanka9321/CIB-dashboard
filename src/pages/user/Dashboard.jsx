@@ -7,7 +7,7 @@ import {
   DollarSign,
   Calendar,
   Shield,
-  Menu,
+  
 } from "lucide-react";
 
 const UserDashboard = () => {

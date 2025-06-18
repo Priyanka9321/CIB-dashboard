@@ -10,23 +10,12 @@ import {
 
 const MembershipStatus = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
-      {/* Navigation Breadcrumb */}
-      <div className="mb-8">
-        <div className="flex items-center text-sm text-gray-600 mb-6">
-          <Home className="w-4 h-4 mr-2" />
-          <span>Home</span>
-          <span className="mx-2">/</span>
-          <span className="text-blue-600 font-medium">Member Status</span>
-        </div>
-      </div>
-
+    <div className="min-h-screen p-4">
       {/* Header Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
           Membership Status
         </h1>
-        <p className="text-gray-600 text-lg">Welcome back, Vaithi 👋</p>
       </div>
 
       {/* Main Card */}
