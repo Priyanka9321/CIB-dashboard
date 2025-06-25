@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 export default function ForgotPasswordForm() {
   const [formData, setFormData] = useState({
-    email: '',
-    mobile: ''
+    email: "",
+    mobile: "",
   });
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleNext = () => {
-    console.log('Next clicked:', formData);
+    console.log("Next clicked:", formData);
   };
 
   const handleBack = () => {
-    console.log('Back clicked');
+    console.log("Back clicked");
   };
 
   return (
@@ -26,16 +26,25 @@ export default function ForgotPasswordForm() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">Forgot Password</h1>
-          <h2 className="text-lg font-medium text-blue-700">Crime Investigation Bureau</h2>
-          <p className="text-gray-600 mt-3">Enter your details to reset your password</p>
+          <h1 className="text-3xl font-bold text-blue-900 mb-2">
+            Forgot Password
+          </h1>
+          <h2 className="text-lg font-medium text-blue-700">
+            Crime Investigation Bureau
+          </h2>
+          <p className="text-gray-600 mt-3">
+            Enter your details to reset your password
+          </p>
         </div>
 
         {/* Form */}
         <div className="space-y-6">
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email
             </label>
             <input
@@ -52,7 +61,10 @@ export default function ForgotPasswordForm() {
 
           {/* Mobile Field */}
           <div>
-            <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="mobile"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Mobile
             </label>
             <input
@@ -76,7 +88,7 @@ export default function ForgotPasswordForm() {
             >
               Next
             </button>
-            
+
             <button
               type="button"
               onClick={handleBack}

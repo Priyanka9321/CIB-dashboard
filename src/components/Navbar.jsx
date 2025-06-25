@@ -34,20 +34,27 @@ const Navbar = () => {
   return (
     <header className="bg-white shadow-lg border-b border-blue-100">
       <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
-        {/* Left - Logo + Active Page Title */}
+        {/* Active Page Title */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
             {/* Dynamic Icon with gradient background */}
             <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-blue-800 to-blue-900 rounded flex items-center justify-center text-white flex-shrink-0">
-              {React.cloneElement(pageIcon, { 
-                size: window.innerWidth < 640 ? 16 : window.innerWidth < 1024 ? 18 : 20 
+              {React.cloneElement(pageIcon, {
+                size:
+                  window.innerWidth < 640
+                    ? 16
+                    : window.innerWidth < 1024
+                    ? 18
+                    : 20,
               })}
             </div>
             {/* Page Title with gradient text - responsive sizing */}
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-800 to-blue-900 bg-clip-text text-transparent truncate">
               <span className="hidden sm:inline">{pageTitle}</span>
               <span className="sm:hidden">
-                {pageTitle.length > 20 ? pageTitle.substring(0, 20) + "..." : pageTitle}
+                {pageTitle.length > 20
+                  ? pageTitle.substring(0, 20) + "..."
+                  : pageTitle}
               </span>
             </h1>
           </div>
