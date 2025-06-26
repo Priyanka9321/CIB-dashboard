@@ -1,24 +1,33 @@
-import React, { useState } from 'react';
-
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 export default function SignupForm() {
   const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
-    email: '',
-    password: ''
+    name: "",
+    mobile: "",
+    email: "",
+    password: "",
   });
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-  };
+  e.preventDefault();
+
+  // Basic validation
+  if (!formData.name || !formData.mobile || !formData.email || !formData.password) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  console.log("Form submitted:", formData);
+  // Optionally store or call API
+  alert("Registration successful!");
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
@@ -26,14 +35,19 @@ export default function SignupForm() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Welcome To</h1>
-          <h2 className="text-xl font-semibold text-blue-700">Crime Investigation Bureau</h2>
+          <h2 className="text-xl font-semibold text-blue-700">
+            Crime Investigation Bureau
+          </h2>
         </div>
 
         {/* Form */}
         <div className="space-y-6">
           {/* Name Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Name
             </label>
             <input
@@ -50,7 +64,10 @@ export default function SignupForm() {
 
           {/* Mobile Number Field */}
           <div>
-            <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="mobile"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Mobile No.
             </label>
             <input
@@ -67,7 +84,10 @@ export default function SignupForm() {
 
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email
             </label>
             <input
@@ -84,7 +104,10 @@ export default function SignupForm() {
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Password
             </label>
             <input
@@ -108,17 +131,18 @@ export default function SignupForm() {
             >
               Sign Up
             </button>
-            
-           
           </div>
 
           {/* Already have account */}
           <div className="text-center pt-4">
             <p className="text-gray-600">
-              Already have an account?{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-800 font-semibold hover:underline">
+              Already have an account?{" "}
+              <Link
+                to="/sign-in"
+                className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+              >
                 Sign in here
-              </a>
+              </Link>
             </p>
           </div>
         </div>

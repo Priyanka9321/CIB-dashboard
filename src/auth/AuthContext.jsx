@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 const fakeUser = {
   name: 'Priyanka',
-  role: 'admin', // 👉 Change to 'user' to test user role
+  role: 'user', // 👉 Change to 'user' to test user role
 };
 
 export const AuthProvider = ({ children }) => {

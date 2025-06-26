@@ -10,7 +10,8 @@ import UpdateProfile from "../pages/user/UpdateProfile";
 import DonationForm from "../pages/user/Donation";
 import MembershipReceipt from "../pages/user/MembershipReceipt";
 import DonationReceipt from "../pages/user/DonationReceipt";
-import MembershipRegistrationForm from "../pages/user/MembershipRegistrationForm"
+import MembershipRegistrationForm from "../pages/user/MembershipRegistrationForm";
+import SignUp from "../components/SignUp";
 const UserRoutes = () => {
   return (
     <Route
@@ -29,9 +30,10 @@ const UserRoutes = () => {
       <Route path="certificate" element={<Certificate />} />
       <Route path="update-profile" element={<UpdateProfile />} />
       <Route path="donate" element={<DonationForm />} />
-      {/* ✅ New Receipt Sub-Routes */}
+      {/* New Receipt Sub-Routes */}
       <Route path="receipt/membership" element={<MembershipReceipt />} />
       <Route path="receipt/donation" element={<DonationReceipt />} />
+      
     </Route>
   );
 };
