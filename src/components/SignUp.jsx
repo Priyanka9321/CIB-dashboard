@@ -1,6 +1,12 @@
-import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+
 export default function SignupForm() {
+  const baseURL = import.meta.env.VITE_BASE_URL;
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
@@ -15,19 +21,40 @@ export default function SignupForm() {
     });
   };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Basic validation
-  if (!formData.name || !formData.mobile || !formData.email || !formData.password) {
-    alert("Please fill in all fields.");
-    return;
-  }
+    if (
+      !formData.name ||
+      !formData.mobile ||
+      !formData.email ||
+      !formData.password
+    ) {
+      alert("Please fill in all fields.");
+      return;
+    }
 
-  console.log("Form submitted:", formData);
-  // Optionally store or call API
-  alert("Registration successful!");
-};
+    try {
+      const response = await axios.post(
+        `${baseURL}/auth/signup`,
+        {
+          fullName: formData.name,
+          userEmail: formData.email,
+          userMobile: formData.mobile,
+          userPassword: formData.password,
+          confirmPassword: formData.password,
+        }
+      );
+
+      if (response.status === 201) {
+        alert("Registration successful!");
+        navigate(`${baseURL}/user/dashboard`);
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert(error.response?.data?.message || "Something went wrong");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
