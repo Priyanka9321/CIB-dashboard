@@ -1,12 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom"; // ✅ Use Link for internal routing
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignInForm = () => {
+  const baseURL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     emailOrMobile: "",
     password: "",
     keepLoggedIn: false,
   });
+  const [error, setError] = useState("");
+
+  console.log("Base URL:", baseURL);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -16,40 +22,59 @@ const SignInForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
     if (!formData.emailOrMobile || !formData.password) {
-      alert("Please fill in all fields.");
+      setError("Please fill in all fields.");
       return;
     }
 
     if (formData.password.length < 6) {
-      alert("Password must be at least 6 characters.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
-    console.log("Sign in submitted:", formData);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^\d{10}$/;
+    if (!emailRegex.test(formData.emailOrMobile) && !mobileRegex.test(formData.emailOrMobile)) {
+      setError("Please enter a valid email or 10-digit mobile number.");
+      return;
+    }
 
-    // Optionally store or call API
-    alert("Login successful!");
+    try {
+      const response = await axios.post(`${baseURL}/auth/login`, {
+        userEmail: formData.emailOrMobile,
+        userPassword: formData.password,
+      });
+      console.log("Response:", response.data);
+      if (response.status === 200) {
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+        }
+        setError("");
+        alert("Login successful!");
+        navigate("/user/dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err);
+      setError(
+        err.response?.data?.errors?.[0]?.message || err.response?.data?.message || "Something went wrong"
+      );
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Welcome To</h1>
           <h2 className="text-xl font-semibold text-blue-700">
             Crime Investigation Bureau
           </h2>
         </div>
-
-        {/* Form */}
-        <div className="space-y-6">
-          {/* Email or Mobile Field */}
+        {error && <div className="text-center text-red-500 mb-4">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
               htmlFor="emailOrMobile"
@@ -68,8 +93,6 @@ const SignInForm = () => {
               required
             />
           </div>
-
-          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -88,8 +111,6 @@ const SignInForm = () => {
               required
             />
           </div>
-
-          {/* Keep me logged in checkbox */}
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -106,19 +127,14 @@ const SignInForm = () => {
               Keep me logged in
             </label>
           </div>
-
-          {/* Sign In Button */}
           <div>
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
             >
               Sign In
             </button>
           </div>
-
-          {/* Forgot Password */}
           <div className="text-center">
             <Link
               to="/forgot-password"
@@ -127,8 +143,6 @@ const SignInForm = () => {
               Forgot Password?
             </Link>
           </div>
-
-          {/* Don't have account */}
           <div className="text-center pt-4 border-t border-gray-200">
             <p className="text-gray-600">
               Don't have an account?{" "}
@@ -140,9 +154,10 @@ const SignInForm = () => {
               </Link>
             </p>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
 };
+
 export default SignInForm;
