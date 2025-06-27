@@ -48,7 +48,7 @@ export default function SignupForm() {
 
       if (response.status === 201) {
         alert("Registration successful!");
-        navigate(`${baseURL}/user/dashboard`);
+        navigate(`/user/dashboard`);
       }
     } catch (error) {
       console.error("Signup error:", error);
