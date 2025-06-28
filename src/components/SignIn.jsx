@@ -3,14 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const SignInForm = () => {
-  const baseURL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+  const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     emailOrMobile: "",
     password: "",
     keepLoggedIn: false,
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   console.log("Base URL:", baseURL);
 
@@ -20,67 +21,103 @@ const SignInForm = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+
+    // Clear error for this field when user starts typing
+    if (errors[name] || errors.general) {
+      setErrors({
+        ...errors,
+        [name]: "",
+        general: "",
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Email or Mobile validation
+    if (!formData.emailOrMobile.trim()) {
+      newErrors.emailOrMobile = "Email or mobile number is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!emailRegex.test(formData.emailOrMobile) && !mobileRegex.test(formData.emailOrMobile)) {
+        newErrors.emailOrMobile = "Please enter a valid email or 10-digit mobile number";
+      }
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.emailOrMobile || !formData.password) {
-      setError("Please fill in all fields.");
+    if (!validateForm()) {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const mobileRegex = /^\d{10}$/;
-    if (!emailRegex.test(formData.emailOrMobile) && !mobileRegex.test(formData.emailOrMobile)) {
-      setError("Please enter a valid email or 10-digit mobile number.");
-      return;
-    }
+    setIsLoading(true);
 
     try {
       const response = await axios.post(`${baseURL}/auth/login`, {
         userEmail: formData.emailOrMobile,
         userPassword: formData.password,
       });
+      
       console.log("Response:", response.data);
+      
       if (response.status === 200) {
         if (response.data.token) {
           localStorage.setItem("token", response.data.token);
         }
-        setError("");
         alert("Login successful!");
         navigate("/user/dashboard");
       }
     } catch (err) {
       console.error("Login error:", err.response?.data || err);
-      setError(
-        err.response?.data?.errors?.[0]?.message || err.response?.data?.message || "Something went wrong"
-      );
+      setErrors({
+        general: err.response?.data?.errors?.[0]?.message || 
+                err.response?.data?.message || 
+                "Invalid credentials. Please try again."
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">Welcome To</h1>
-          <h2 className="text-xl font-semibold text-blue-700">
-            Crime Investigation Bureau
-          </h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h1>
+          <p className="text-sm text-gray-600">Crime Investigation Bureau</p>
         </div>
-        {error && <div className="text-center text-red-500 mb-4">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* General Error */}
+        {errors.general && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            {errors.general}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email or Mobile Field */}
           <div>
             <label
               htmlFor="emailOrMobile"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email OR Mobile No.
+              Email or Mobile Number
             </label>
             <input
               type="text"
@@ -88,15 +125,22 @@ const SignInForm = () => {
               name="emailOrMobile"
               value={formData.emailOrMobile}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-              placeholder="Enter your email or mobile number"
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                errors.emailOrMobile ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter email or mobile number"
               required
             />
+            {errors.emailOrMobile && (
+              <p className="text-red-500 text-xs mt-1">{errors.emailOrMobile}</p>
+            )}
           </div>
+
+          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
               Password
             </label>
@@ -106,51 +150,67 @@ const SignInForm = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              }`}
               placeholder="Enter your password"
               required
             />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="keepLoggedIn"
-              name="keepLoggedIn"
-              checked={formData.keepLoggedIn}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor="keepLoggedIn"
-              className="ml-2 block text-sm text-gray-700"
-            >
-              Keep me logged in
-            </label>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-            >
-              Sign In
-            </button>
-          </div>
-          <div className="text-center">
+
+          {/* Keep Logged In */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="keepLoggedIn"
+                name="keepLoggedIn"
+                checked={formData.keepLoggedIn}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="keepLoggedIn"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                Remember me
+              </label>
+            </div>
             <Link
               to="/forgot-password"
-              className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
             >
               Forgot Password?
             </Link>
           </div>
-          <div className="text-center pt-4 border-t border-gray-200">
-            <p className="text-gray-600">
+
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
+                isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
+              } text-white`}
+            >
+              {isLoading ? "Signing In..." : "Sign In"}
+            </button>
+          </div>
+
+          {/* Don't have account */}
+          <div className="text-center pt-3 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link
                 to="/sign-up"
-                className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+                className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
               >
-                Sign up here
+                Create account
               </Link>
             </p>
           </div>

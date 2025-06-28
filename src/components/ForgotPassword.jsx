@@ -1,151 +1,132 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
-export default function ForgotPasswordForm() {
-  const [formData, setFormData] = useState({
-    email: "",
-    mobile: "",
-  });
-
+export default function ForgotPassword() {
+  const baseURL = import.meta.env.VITE_BASE_URL;
+  const [formData, setFormData] = useState({ emailOrMobile: "" });
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
-  const validate = () => {
+  const validateForm = () => {
     const newErrors = {};
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required.";
-    }
-    if (!formData.mobile.trim()) {
-      newErrors.mobile = "Mobile number is required.";
+    if (!formData.emailOrMobile.trim()) {
+      newErrors.emailOrMobile = "Email or mobile number is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!emailRegex.test(formData.emailOrMobile) && !mobileRegex.test(formData.emailOrMobile)) {
+        newErrors.emailOrMobile = "Please enter a valid email or 10-digit mobile number";
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (!validate()) return;
+  const handleSendOtp = async () => {
+    if (!validateForm()) return;
 
-    console.log("Next clicked:", formData);
-    alert("Password reset instructions sent!");
-    // You can navigate to OTP page or set new password page
-    // navigate("/reset-password");
-  };
+    setIsLoading(true);
 
-  const handleBack = () => {
-    navigate("/sign-in");
+    try {
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailOrMobile);
+      const payload = isEmail
+        ? { userEmail: formData.emailOrMobile, userMobile: "" }
+        : { userEmail: "", userMobile: formData.emailOrMobile };
+
+      const response = await axios.post(
+        `${baseURL}/auth/forgot-password`,
+        payload
+      );
+
+      if (response.status === 200) {
+        alert("OTP sent to your registered email/mobile!");
+        navigate("/reset-password", { state: { userId: response.data.userId } });
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      setErrors({
+        ...errors,
+        api: error.response?.data?.message || "Failed to send OTP. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">
-            Forgot Password
-          </h1>
-          <h2 className="text-lg font-medium text-blue-700">
-            Crime Investigation Bureau
-          </h2>
-          <p className="text-gray-600 mt-3">
-            Enter your details to reset your password
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Forgot Password</h1>
+          <p className="text-sm text-gray-600">Crime Investigation Bureau</p>
         </div>
-
-        {/* Form */}
-        <div className="space-y-6">
-          {/* Email Field */}
+        <div className="space-y-4">
+          {errors.api && <p className="text-red-500 text-xs">{errors.api}</p>}
           <div>
             <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor="emailOrMobile"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email
+              Email or Mobile No.
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="emailOrMobile"
+              name="emailOrMobile"
+              value={formData.emailOrMobile}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors`}
-              placeholder="Enter your email address"
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                errors.emailOrMobile ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter email or mobile number"
+              required
             />
-            {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+            {errors.emailOrMobile && (
+              <p className="text-red-500 text-xs mt-1">{errors.emailOrMobile}</p>
             )}
           </div>
-
-          {/* Mobile Field */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={isLoading}
+              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
+                isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 hover:shadow-lg"
+              } text-white`}
+            >
+              {isLoading ? "Sending OTP..." : "Send OTP"}
+            </button>
+          </div>
           <div>
-            <label
-              htmlFor="mobile"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Mobile
-            </label>
-            <input
-              type="tel"
-              id="mobile"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${
-                errors.mobile ? "border-red-500" : "border-gray-300"
-              } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors`}
-              placeholder="Enter your mobile number"
-            />
-            {errors.mobile && (
-              <p className="text-red-600 text-sm mt-1">{errors.mobile}</p>
-            )}
-          </div>
-
-          {/* Buttons */}
-          <div className="space-y-4 pt-4">
             <button
               type="button"
-              onClick={handleNext}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              onClick={() => navigate("/sign-in")}
+              disabled={isLoading}
+              className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-200 transition-all duration-200 border border-gray-300"
             >
-              Next
-            </button>
-
-            <button
-              type="button"
-              onClick={handleBack}
-              className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-200 transform hover:scale-105 transition-all duration-200 border border-gray-300"
-            >
-              Back
+              Back to Sign In
             </button>
           </div>
-
-          {/* Navigation Links */}
-          <div className="text-center pt-6 border-t border-gray-200">
-            <p className="text-gray-600">
-              Remembered your password?{" "}
-              <Link
-                to="/sign-in"
-                className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
-              >
-                Sign in here
-              </Link>
-            </p>
-            <p className="text-gray-600 mt-2">
-              Don’t have an account?{" "}
+          <div className="text-center pt-3 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
               <Link
                 to="/sign-up"
-                className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+                className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
               >
-                Sign up now
+                Create account
               </Link>
             </p>
           </div>
