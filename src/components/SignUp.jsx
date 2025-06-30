@@ -1,65 +1,69 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { toast } from "react-toastify";
 
 export default function SignupForm() {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
+  const { setUser } = useAuth();
+
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
     email: "",
     password: "",
+    role: "1", // Default roleId (1 = user)
   });
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
-    
-    // Clear error for this field when user starts typing
+    }));
+
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors((prev) => ({
+        ...prev,
         [name]: "",
-      });
+      }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     } else if (formData.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Mobile validation
     if (!formData.mobile.trim()) {
       newErrors.mobile = "Mobile number is required";
     } else if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
       newErrors.mobile = "Please enter a valid 10-digit mobile number";
     }
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (!["1", "2"].includes(formData.role)) {
+      newErrors.role = "Please select a valid role";
     }
 
     setErrors(newErrors);
@@ -69,31 +73,37 @@ export default function SignupForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${baseURL}/auth/signup`,
-        {
-          fullName: formData.name,
-          userEmail: formData.email,
-          userMobile: formData.mobile,
-          userPassword: formData.password,
-          confirmPassword: formData.password,
-        }
-      );
+      const payload = {
+        fullName: formData.name,
+        userEmail: formData.email,
+        userMobile: formData.mobile,
+        userPassword: formData.password,
+        confirmPassword: formData.password,
+        role: parseInt(formData.role), // Send roleId as a number
+      };
+      console.log("Sending request to:", `${baseURL}/auth/signup`);
+      console.log("Request payload:", payload);
+
+      const response = await axios.post(`${baseURL}/auth/signup`, payload);
 
       if (response.status === 201) {
-        alert("Registration successful!");
-        navigate(`/user/dashboard`);
+        const userData = {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role === "2" ? "admin" : "user", // Map roleId to roleName for AuthContext
+        };
+        setUser(userData);
+        toast.success("Registration successful!");
+        navigate(formData.role === "2" ? "/admin/dashboard" : "/user/dashboard");
       }
     } catch (error) {
-      console.error("Signup error:", error);
-      alert(error.response?.data?.message || "Something went wrong");
+      const errorMessage = error.response?.data?.message || "Something went wrong";
+      console.error("Signup Error:", errorMessage, error.response?.data);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -102,15 +112,12 @@ export default function SignupForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1">Join CIB</h1>
           <p className="text-sm text-gray-600">Crime Investigation Bureau</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name Field */}
           <div>
             <label
               htmlFor="name"
@@ -124,7 +131,7 @@ export default function SignupForm() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter your full name"
@@ -135,7 +142,6 @@ export default function SignupForm() {
             )}
           </div>
 
-          {/* Mobile Number Field */}
           <div>
             <label
               htmlFor="mobile"
@@ -149,7 +155,7 @@ export default function SignupForm() {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 errors.mobile ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter 10-digit mobile number"
@@ -161,7 +167,6 @@ export default function SignupForm() {
             )}
           </div>
 
-          {/* Email Field */}
           <div>
             <label
               htmlFor="email"
@@ -175,7 +180,7 @@ export default function SignupForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter your email address"
@@ -186,7 +191,6 @@ export default function SignupForm() {
             )}
           </div>
 
-          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -200,7 +204,7 @@ export default function SignupForm() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                 errors.password ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Minimum 6 characters"
@@ -211,7 +215,31 @@ export default function SignupForm() {
             )}
           </div>
 
-          {/* Submit Button */}
+          <div>
+            <label
+              htmlFor="role"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Register As
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                errors.role ? "border-red-500" : "border-gray-300"
+              }`}
+              required
+            >
+              <option value="1">User</option>
+              <option value="2">Admin</option>
+            </select>
+            {errors.role && (
+              <p className="text-red-500 text-xs mt-1">{errors.role}</p>
+            )}
+          </div>
+
           <div className="pt-2">
             <button
               type="submit"
@@ -226,7 +254,6 @@ export default function SignupForm() {
             </button>
           </div>
 
-          {/* Already have account */}
           <div className="text-center pt-3 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}

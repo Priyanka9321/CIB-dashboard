@@ -1,28 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../auth/AuthContext";
+import { toast } from "react-toastify";
 
 const SignInForm = () => {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
+  const { user, setUser } = useAuth();
+
   const [formData, setFormData] = useState({
     emailOrMobile: "",
     password: "",
     keepLoggedIn: false,
   });
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log("Base URL:", baseURL);
+  useEffect(() => {
+    console.log("AuthContext user after login:", user); // Debug user state
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value.trim(),
     });
 
-    // Clear error for this field when user starts typing
     if (errors[name] || errors.general) {
       setErrors({
         ...errors,
@@ -34,19 +40,19 @@ const SignInForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^[6-9]\d{9}$/;
 
-    // Email or Mobile validation
     if (!formData.emailOrMobile.trim()) {
       newErrors.emailOrMobile = "Email or mobile number is required";
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const mobileRegex = /^[6-9]\d{9}$/;
-      if (!emailRegex.test(formData.emailOrMobile) && !mobileRegex.test(formData.emailOrMobile)) {
-        newErrors.emailOrMobile = "Please enter a valid email or 10-digit mobile number";
-      }
+    } else if (
+      !emailRegex.test(formData.emailOrMobile) &&
+      !mobileRegex.test(formData.emailOrMobile)
+    ) {
+      newErrors.emailOrMobile =
+        "Please enter a valid email or 10-digit mobile number";
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
@@ -60,9 +66,7 @@ const SignInForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
@@ -71,23 +75,76 @@ const SignInForm = () => {
         userEmail: formData.emailOrMobile,
         userPassword: formData.password,
       });
-      
-      console.log("Response:", response.data);
-      
+
+      console.log("Backend response:", response.data);
+      const validRoles = ["user", "admin"];
+      const userRole = user?.role?.toLowerCase() || "user";
+      const userInfo = {
+        name: user?.name || "User",
+        email: user?.email || formData.emailOrMobile,
+        role: validRoles.includes(userRole) ? userRole : "user",
+      };
+      console.log("User info:", userInfo);
+      setUser(userInfo);
+      navigate(
+        userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+        { replace: true }
+      );
+
       if (response.status === 200) {
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
+        const { token, user } = response.data;
+
+        // Clear existing storage
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+
+        // Store token based on keepLoggedIn
+        if (token) {
+          if (formData.keepLoggedIn) {
+            localStorage.setItem("token", token);
+          } else {
+            sessionStorage.setItem("token", token);
+          }
         }
-        alert("Login successful!");
-        navigate("/user/dashboard");
+
+        // Normalize and validate role
+        const validRoles = ["user", "admin"];
+        const userRole = user?.role?.toLowerCase() || "user";
+
+        if (!validRoles.includes(userRole)) {
+          console.warn(
+            `Invalid role received: ${userRole}. Defaulting to "user".`
+          );
+        }
+
+        const userInfo = {
+          name: user?.name || "User",
+          email: user?.email || formData.emailOrMobile,
+          role: validRoles.includes(userRole) ? userRole : "user",
+        };
+
+        console.log("User info:", userInfo); // Debug user info
+
+        setUser(userInfo);
+
+        toast.success("Login successful!");
+
+        // Redirect based on role
+        navigate(
+          userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard"
+        );
       }
     } catch (err) {
       console.error("Login error:", err.response?.data || err);
       setErrors({
-        general: err.response?.data?.errors?.[0]?.message || 
-                err.response?.data?.message || 
-                "Invalid credentials. Please try again."
+        ...errors,
+        general:
+          err.response?.data?.message ||
+          "Invalid credentials. Please try again.",
       });
+      toast.error(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -96,22 +153,20 @@ const SignInForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">
+            Welcome Back
+          </h1>
           <p className="text-sm text-gray-600">Crime Investigation Bureau</p>
         </div>
 
-        {/* General Error */}
         {errors.general && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
             {errors.general}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email or Mobile Field */}
           <div>
             <label
               htmlFor="emailOrMobile"
@@ -130,13 +185,15 @@ const SignInForm = () => {
               }`}
               placeholder="Enter email or mobile number"
               required
+              disabled={isLoading}
             />
             {errors.emailOrMobile && (
-              <p className="text-red-500 text-xs mt-1">{errors.emailOrMobile}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {errors.emailOrMobile}
+              </p>
             )}
           </div>
 
-          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -155,13 +212,13 @@ const SignInForm = () => {
               }`}
               placeholder="Enter your password"
               required
+              disabled={isLoading}
             />
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">{errors.password}</p>
             )}
           </div>
 
-          {/* Keep Logged In */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -171,12 +228,13 @@ const SignInForm = () => {
                 checked={formData.keepLoggedIn}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                disabled={isLoading}
               />
               <label
                 htmlFor="keepLoggedIn"
                 className="ml-2 block text-sm text-gray-700"
               >
-                Remember me
+                Keep me logged in
               </label>
             </div>
             <Link
@@ -187,7 +245,6 @@ const SignInForm = () => {
             </Link>
           </div>
 
-          {/* Submit Button */}
           <div className="pt-2">
             <button
               type="submit"
@@ -202,7 +259,6 @@ const SignInForm = () => {
             </button>
           </div>
 
-          {/* Don't have account */}
           <div className="text-center pt-3 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}

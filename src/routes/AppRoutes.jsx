@@ -5,30 +5,30 @@ import UserRoutes from "./UserRoutes";
 import SignUp from "../components/SignUp";
 import SignIn from "../components/SignIn";
 import ForgotPassword from "../components/ForgotPassword";
-import ResetPasswordForm  from "../components/ResetPassword";
+import ResetPasswordForm from "../components/ResetPassword";
+
 const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
     <Routes>
-      {/* 🔁 Redirect based on role */}
       <Route
         path="/"
         element={
-          user?.role === "admin" ? (
+          !user ? (
+            <Navigate to="/sign-up" />
+          ) : user.role === "admin" ? (
             <Navigate to="/admin/dashboard" />
-          ) : user?.role === "user" ? (
+          ) : user.role === "user" ? (
             <Navigate to="/user/dashboard" />
           ) : (
-            <Navigate to="/login" />
+            <Navigate to="/unauthorized" />
           )
         }
       />
-      {/* Role-Based Protected Routes */}
       {AdminRoutes()}
       {UserRoutes()}
-      {/* Public Routes */}
-      <Route path="/sign-up" element={<SignUp />} /> 
+      <Route path="/sign-up" element={<SignUp />} />
       <Route path="/sign-in" element={<SignIn />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPasswordForm />} />
