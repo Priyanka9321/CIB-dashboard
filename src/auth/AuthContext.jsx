@@ -6,7 +6,6 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const baseURL = import.meta.env.VITE_BASE_URL;
-
   const logout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");

@@ -7,12 +7,13 @@ import {
   KeyRound,
   UserCircle,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { menuItems } from "../constants/menuItems";
 
 const Navbar = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Find active item and get its icon
   const activeItem = menuItems
@@ -30,6 +31,35 @@ const Navbar = () => {
 
   const pageTitle = activeItem?.label || "Crime Investigation Bureau";
   const pageIcon = activeParentItem?.icon || <Shield size={20} />;
+
+  // Secure logout function
+  const handleLogout = async () => {
+    try {
+      // Close the dropdown
+      setProfileDropdownOpen(false);
+
+      // Clear authentication tokens and user data
+      localStorage.removeItem("authToken"); // Remove JWT or other tokens
+      sessionStorage.clear(); // Clear session storage
+      document.cookie = "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // Clear cookies
+
+      // Optionally, make an API call to invalidate the session on the server
+      await fetch("/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`, // Include token if required
+        },
+      });
+
+      // Redirect to login page
+      navigate("/sign-in");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally show an error message to the user
+      alert("An error occurred during logout. Please try again.");
+    }
+  };
 
   return (
     <header className="bg-white shadow-lg border-b border-blue-100">
@@ -104,7 +134,7 @@ const Navbar = () => {
                   className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 hover:bg-blue-50 transition-colors"
                   onClick={() => {
                     setProfileDropdownOpen(false);
-                    // Handle profile action
+                    navigate("/profile"); // Navigate to profile page
                   }}
                 >
                   <UserCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -115,7 +145,7 @@ const Navbar = () => {
                   className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 hover:bg-blue-50 transition-colors"
                   onClick={() => {
                     setProfileDropdownOpen(false);
-                    // Handle forgot password action
+                    navigate("/forgot-password"); // Navigate to forgot password page
                   }}
                 >
                   <KeyRound className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -124,10 +154,7 @@ const Navbar = () => {
 
                 <button
                   className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:bg-red-50 transition-colors"
-                  onClick={() => {
-                    setProfileDropdownOpen(false);
-                    // Handle logout action
-                  }}
+                  onClick={handleLogout}
                 >
                   <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                   <span>Logout</span>
