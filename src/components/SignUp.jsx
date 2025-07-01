@@ -14,7 +14,6 @@ export default function SignupForm() {
     mobile: "",
     email: "",
     password: "",
-    role: "1", // Default roleId (1 = user)
   });
 
   const [errors, setErrors] = useState({});
@@ -62,10 +61,6 @@ export default function SignupForm() {
       newErrors.password = "Password must be at least 6 characters";
     }
 
-    if (!["1", "2"].includes(formData.role)) {
-      newErrors.role = "Please select a valid role";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -83,7 +78,6 @@ export default function SignupForm() {
         userMobile: formData.mobile,
         userPassword: formData.password,
         confirmPassword: formData.password,
-        role: parseInt(formData.role), // Send roleId as a number
       };
       console.log("Sending request to:", `${baseURL}/auth/signup`);
       console.log("Request payload:", payload);
@@ -94,11 +88,11 @@ export default function SignupForm() {
         const userData = {
           name: formData.name,
           email: formData.email,
-          role: formData.role === "2" ? "admin" : "user", // Map roleId to roleName for AuthContext
+          role: "user",
         };
         setUser(userData);
         toast.success("Registration successful!");
-        navigate(formData.role === "2" ? "/admin/dashboard" : "/user/dashboard");
+        navigate("/user/dashboard");
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Something went wrong";
@@ -212,31 +206,6 @@ export default function SignupForm() {
             />
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Register As
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                errors.role ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            >
-              <option value="1">User</option>
-              <option value="2">Admin</option>
-            </select>
-            {errors.role && (
-              <p className="text-red-500 text-xs mt-1">{errors.role}</p>
             )}
           </div>
 

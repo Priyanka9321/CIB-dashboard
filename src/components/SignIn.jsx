@@ -76,23 +76,13 @@ const SignInForm = () => {
         userPassword: formData.password,
       });
 
-      console.log("Backend response:", response.data);
-      const validRoles = ["user", "admin"];
-      const userRole = user?.role?.toLowerCase() || "user";
-      const userInfo = {
-        name: user?.name || "User",
-        email: user?.email || formData.emailOrMobile,
-        role: validRoles.includes(userRole) ? userRole : "user",
-      };
-      console.log("User info:", userInfo);
-      setUser(userInfo);
-      navigate(
-        userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
-        { replace: true }
-      );
-
       if (response.status === 200) {
-        const { token, user } = response.data;
+        const { token, user: userData } = response.data;
+        const userInfo = {
+          name: userData.name,
+          email: userData.email,
+          role: userData.role.toLowerCase(),
+        };
 
         // Clear existing storage
         localStorage.removeItem("token");
@@ -107,32 +97,9 @@ const SignInForm = () => {
           }
         }
 
-        // Normalize and validate role
-        const validRoles = ["user", "admin"];
-        const userRole = user?.role?.toLowerCase() || "user";
-
-        if (!validRoles.includes(userRole)) {
-          console.warn(
-            `Invalid role received: ${userRole}. Defaulting to "user".`
-          );
-        }
-
-        const userInfo = {
-          name: user?.name || "User",
-          email: user?.email || formData.emailOrMobile,
-          role: validRoles.includes(userRole) ? userRole : "user",
-        };
-
-        console.log("User info:", userInfo); // Debug user info
-
         setUser(userInfo);
-
         toast.success("Login successful!");
-
-        // Redirect based on role
-        navigate(
-          userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard"
-        );
+        navigate(userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
       }
     } catch (err) {
       console.error("Login error:", err.response?.data || err);
@@ -149,6 +116,9 @@ const SignInForm = () => {
       setIsLoading(false);
     }
   };
+
+  // Check if the entered email is the admin email
+  const isAdminEmail = formData.emailOrMobile === "admin@cib.com";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
@@ -237,12 +207,14 @@ const SignInForm = () => {
                 Keep me logged in
               </label>
             </div>
-            <Link
-              to="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
-            >
-              Forgot Password?
-            </Link>
+            {!isAdminEmail && (
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            )}
           </div>
 
           <div className="pt-2">
