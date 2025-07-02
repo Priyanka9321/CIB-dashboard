@@ -38,7 +38,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     {
       icon: <FileText size={20} />,
       label: "Appointment Letter",
-      to: "/user/appointment",
+      to: `/user/appointment-letter`,
     },
     {
       icon: <Award size={20} />,

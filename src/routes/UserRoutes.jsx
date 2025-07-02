@@ -12,6 +12,7 @@ import MembershipReceipt from "../pages/user/MembershipReceipt";
 import DonationReceipt from "../pages/user/DonationReceipt";
 import MembershipRegistrationForm from "../pages/user/MembershipRegistrationForm";
 import SignUp from "../components/SignUp";
+import AppointmentLetter from "../pages/user/AppointmentLetter";
 const UserRoutes = () => {
   return (
     <Route
@@ -33,6 +34,9 @@ const UserRoutes = () => {
       {/* New Receipt Sub-Routes */}
       <Route path="receipt/membership" element={<MembershipReceipt />} />
       <Route path="receipt/donation" element={<DonationReceipt />} />
+
+      {/*  Appointment Letter Route */}
+      <Route path="appointment-letter" element={<AppointmentLetter />} />
       
     </Route>
   );
