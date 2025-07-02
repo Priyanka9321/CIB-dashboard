@@ -45,8 +45,6 @@ export default function CongratulationsPopup() {
                 Apply Now
               </button>
             </div>
-
-
           </div>
         </div>
       </div>

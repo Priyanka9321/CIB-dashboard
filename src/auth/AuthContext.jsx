@@ -5,11 +5,14 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
   const baseURL = import.meta.env.VITE_BASE_URL;
+
   const logout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     setUser(null);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -33,12 +36,17 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("token");
           sessionStorage.removeItem("token");
           setUser(null);
+        })
+        .finally(() => {
+          setLoading(false); // Set loading to false after API call
         });
+    } else {
+      setLoading(false); // No token, no need to fetch
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
