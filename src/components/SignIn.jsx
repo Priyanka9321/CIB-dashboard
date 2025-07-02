@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../auth/AuthContext";
+import { usePopup } from "../context/PopupContext";
 import { toast } from "react-toastify";
 
 const SignInForm = () => {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
+  const popupContext = usePopup();
+  const { setIsPopupOpen } = popupContext || {};
 
   const [formData, setFormData] = useState({
     emailOrMobile: "",
@@ -103,6 +106,11 @@ const SignInForm = () => {
         }
 
         setUser(userInfo);
+        if (setIsPopupOpen) {
+          setIsPopupOpen(true);
+        } else {
+          console.warn("Popup not triggered: setIsPopupOpen is undefined");
+        }
         toast.success("Login successful!");
         navigate(userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
       }

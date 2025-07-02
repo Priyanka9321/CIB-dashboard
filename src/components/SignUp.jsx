@@ -1,13 +1,17 @@
+// src/components/SignUp.jsx
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { usePopup } from "../context/PopupContext";
 import { toast } from "react-toastify";
 
 export default function SignupForm() {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const popupContext = usePopup();
+  const { setIsPopupOpen } = popupContext || {};
 
   const [formData, setFormData] = useState({
     name: "",
@@ -84,8 +88,8 @@ export default function SignupForm() {
         userPassword: formData.password,
         confirmPassword: formData.password,
       };
-      console.log("Sending request to:", `${baseURL}/auth/signup`);
-      console.log("Request payload:", payload);
+      // console.log("Sending request to:", `${baseURL}/auth/signup`);
+      // console.log("Request payload:", payload);
 
       const response = await axios.post(`${baseURL}/auth/signup`, payload);
 
@@ -96,6 +100,11 @@ export default function SignupForm() {
           role: "user",
         };
         setUser(userData);
+        if (setIsPopupOpen) {
+          setIsPopupOpen(true);
+        } else {
+          console.warn("Popup not triggered: setIsPopupOpen is undefined");
+        }
         toast.success("Registration successful!");
         navigate("/user/dashboard");
       }
@@ -130,15 +139,12 @@ export default function SignupForm() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.name ? "border-red-500" : "border-gray-300"
+                }`}
               placeholder="Enter your full name"
               required
             />
-            {errors.name && (
-              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-            )}
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
 
           <div>
@@ -154,16 +160,13 @@ export default function SignupForm() {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                errors.mobile ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.mobile ? "border-red-500" : "border-gray-300"
+                }`}
               placeholder="Enter 10-digit mobile number"
               maxLength="10"
               required
             />
-            {errors.mobile && (
-              <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>
-            )}
+            {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
           </div>
 
           <div>
@@ -179,15 +182,12 @@ export default function SignupForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                }`}
               placeholder="Enter your email address"
               required
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
 
           <div>
@@ -204,9 +204,8 @@ export default function SignupForm() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-3 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-3 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.password ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Minimum 6 characters"
                 required
               />
@@ -252,20 +251,15 @@ export default function SignupForm() {
                 )}
               </button>
             </div>
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            )}
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
-                isLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
-              } text-white`}
+              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
+                } text-white`}
             >
               {isLoading ? "Creating Account..." : "Create Account"}
             </button>
@@ -273,6 +267,7 @@ export default function SignupForm() {
 
           <div className="text-center pt-3 border-t border-gray-200">
             <p className="text-sm text-gray-600">
+
               Already have an account?{" "}
               <Link
                 to="/sign-in"
