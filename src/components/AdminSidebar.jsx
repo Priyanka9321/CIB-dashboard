@@ -20,6 +20,28 @@ import {
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 
+// Add custom scrollbar styles
+const scrollbarStyles = `
+  /* Custom scrollbar for webkit browsers */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.3);
+    border-radius: 10px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.8);
+    border-radius: 10px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.9);
+  }
+`;
+
 const menuItems = [
   { label: 'Dashboard', icon: <HomeIcon size={20} />, to: '/admin/dashboard' },
   { label: 'New Memberships', icon: <UserPlusIcon size={20} />, count: 85, to: '/admin/newmembership' },
@@ -103,19 +125,23 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <>
+      {/* Add custom scrollbar styles */}
+      <style>{scrollbarStyles}</style>
+      
       <aside
         className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-slate-900 via-blue-900 to-slate-800 transition-transform duration-300 ease-in-out`}
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-slate-900 via-blue-900 to-slate-800 transition-transform duration-300 ease-in-out flex flex-col h-screen`}
       >
         <div className="p-4 border border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              {/* Icon from public folder */}
               <img
-                src="/logo.png"
-                alt="Logo"
-                className="w-6 h-6 object-contain rounded-full"
+                src="/favicon.ico"
+                alt="CIB Logo"
+                className="w-6 h-6 object-contain"
               />
-              <p className="text-white text-lg">Shri Ram Navyug Trust</p>
+              <p className="text-white text-lg">Crime Investigation Bureau</p>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -126,7 +152,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
 
-        <nav className="mt-4 px-3 flex-1 overflow-y-auto">
+        <nav className="mt-4 px-3 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 hover:scrollbar-thumb-slate-500 pb-4">
           {menuItems.map((item, index) => {
             if (!item.children) {
               return (
@@ -134,7 +160,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   key={index}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-4 py-3 mx-2 my-1 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 ${isActive
+                    `flex items-center justify-between px-4 py-3 mx-2 my-1 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 ${isActive
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                       : ""
                     }`
@@ -158,7 +184,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <div key={index} className="mx-2 my-1">
                   <button
                     onClick={() => handleToggle(index)}
-                    className="flex items-center justify-between px-4 py-3 w-full  text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    className="flex items-center justify-between px-4 py-3 w-full rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -185,7 +211,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           key={childIdx}
                           to={child.to}
                           className={({ isActive }) =>
-                            `flex items-center justify-between py-2 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 ${isActive ? "text-blue-400 bg-blue-900/30" : ""
+                            `flex items-center justify-between py-2 px-3 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 ${isActive ? "text-blue-400 bg-blue-900/30" : ""
                             }`
                           }
                         >
@@ -208,10 +234,10 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50">
+        <div className="mt-auto p-4 border-t">
           <div className="text-center">
             <p className="text-xs text-blue-200/70">
-              © 2024 Shri Ram Navyug Trust
+              © 2024 Crime Investigation Bureau
             </p>
           </div>
         </div>
