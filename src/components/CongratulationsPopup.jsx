@@ -8,20 +8,19 @@ export default function CongratulationsPopup() {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-      {/* Popup Modal with matching gradient background */}
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4 fixed inset-0">
-        <div className="relative z-50 bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4 transform transition-all duration-300">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 fixed inset-0">
+        <div className="relative z-50 bg-white shadow-xl p-6 w-full max-w-md mx-4 transform transition-all duration-300">
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
           >
-            <X size={24} />
+            <X size={18} />
           </button>
 
-          {/* Header with Green Success Banner - matching ResetPasswordForm style */}
+         
           <div className="text-center mb-6">
-            <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg mb-4 text-sm font-medium">
+            <div className="bg-green-100 text-green-800 px-4 py-2  mb-4 text-sm font-medium">
               Congratulations! Your 1st Step Completed ✓
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-1">Apply For Membership</h1>
@@ -40,7 +39,7 @@ export default function CongratulationsPopup() {
             <div className="pt-2">
               <button
                 onClick={handleApplyNow}
-                className="w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 bg-green-600 hover:bg-green-700 hover:shadow-lg text-white"
+                className="w-full py-2.5 px-4 font-medium transition-all duration-200 bg-green-600 hover:bg-green-700 hover:shadow-lg text-white"
               >
                 Apply Now
               </button>

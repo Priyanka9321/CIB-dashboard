@@ -23,7 +23,7 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    console.log("AuthContext user after login:", user); // Debug user state
+    console.log("AuthContext user after login:", user); 
   }, [user]);
 
   const handleChange = (e) => {
@@ -71,71 +71,73 @@ const SignInForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const response = await axios.post(`${baseURL}/auth/login`, {
-        userEmail: formData.emailOrMobile,
-        userPassword: formData.password,
-      });
+  try {
+    const response = await axios.post(`${baseURL}/auth/login`, {
+      userEmail: formData.emailOrMobile,
+      userPassword: formData.password,
+    });
 
-      if (response.status === 200) {
-        const { token, user: userData } = response.data;
-        const userInfo = {
-          name: userData.name,
-          email: userData.email,
-          role: userData.role.toLowerCase(),
-        };
+    if (response.status === 200) {
+      const { token, user: userData } = response.data;
+      const userInfo = {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role.toLowerCase(),
+      };
 
-        // Clear existing storage
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
+      // Clear existing tokens
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
 
-        // Store token based on keepLoggedIn
-        if (token) {
-          if (formData.keepLoggedIn) {
-            localStorage.setItem("token", token);
-          } else {
-            sessionStorage.setItem("token", token);
-          }
-        }
-
-        setUser(userInfo);
-        if (setIsPopupOpen) {
-          setIsPopupOpen(true);
+      // Set new token
+      if (token) {
+        if (formData.keepLoggedIn) {
+          localStorage.setItem("token", token);
         } else {
-          console.warn("Popup not triggered: setIsPopupOpen is undefined");
+          sessionStorage.setItem("token", token);
         }
-        toast.success("Login successful!");
-        navigate(userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
       }
-    } catch (err) {
-      console.error("Login error:", err.response?.data || err);
-      setErrors({
-        ...errors,
-        general:
-          err.response?.data?.message ||
-          "Invalid credentials. Please try again.",
-      });
-      toast.error(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  // Check if the entered email is the admin email
+      setUser(userInfo);
+
+      // Show popup if available
+      if (setIsPopupOpen) {
+        setIsPopupOpen(true);
+      }
+
+      toast.success("Login successful!");
+      navigate(userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+    }
+  } catch (err) {
+    console.error("Login error:", err.response?.data || err);
+
+    const errorMessage =
+      err.response?.data?.message || "Login failed. Please try again.";
+
+    setErrors({
+      ...errors,
+      general: errorMessage,
+    });
+
+    toast.error(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
   const isAdminEmail = formData.emailOrMobile === "admin@cib.com";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+      <div className="bg-white shadow-xl p-6 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
             Welcome Back
@@ -144,7 +146,7 @@ const SignInForm = () => {
         </div>
 
         {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 mb-4 text-sm">
             {errors.general}
           </div>
         )}
@@ -163,7 +165,7 @@ const SignInForm = () => {
               name="emailOrMobile"
               value={formData.emailOrMobile}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
                 errors.emailOrMobile ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter email or mobile number"
@@ -191,7 +193,7 @@ const SignInForm = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors pr-10 ${
+                className={`w-full px-3 py-2.5 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors pr-10 ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Enter your password"
@@ -205,7 +207,7 @@ const SignInForm = () => {
                 disabled={isLoading}
               >
                 {showPassword ? (
-                  // Eye slash icon (hide password)
+                  
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -221,7 +223,7 @@ const SignInForm = () => {
                     />
                   </svg>
                 ) : (
-                  // Eye icon (show password)
+                 
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -282,7 +284,7 @@ const SignInForm = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
+              className={`w-full py-2.5 px-4 font-medium transition-all duration-200 ${
                 isLoading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"

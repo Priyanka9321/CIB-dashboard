@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -49,12 +50,12 @@ export default function ForgotPassword() {
       );
 
       if (response.status === 200) {
-        alert("OTP sent to your registered email/mobile!");
+        toast.success("OTP sent to your registered email!");
         navigate("/reset-password", { state: { userId: response.data.userId } });
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
-      setErrors({
+       toast.error({
         ...errors,
         api: error.response?.data?.message || "Failed to send OTP. Please try again.",
       });
@@ -65,7 +66,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+      <div className="bg-white shadow-xl p-6 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1">Forgot Password</h1>
           <p className="text-sm text-gray-600">Crime Investigation Bureau</p>
@@ -85,7 +86,7 @@ export default function ForgotPassword() {
               name="emailOrMobile"
               value={formData.emailOrMobile}
               onChange={handleChange}
-              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+              className={`w-full px-3 py-2.5 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
                 errors.emailOrMobile ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter email or mobile number"
@@ -100,7 +101,7 @@ export default function ForgotPassword() {
               type="button"
               onClick={handleSendOtp}
               disabled={isLoading}
-              className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
+              className={`w-full py-2.5 px-4 font-medium transition-all duration-200 ${
                 isLoading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-green-600 hover:bg-green-700 hover:shadow-lg"
@@ -114,7 +115,7 @@ export default function ForgotPassword() {
               type="button"
               onClick={() => navigate("/sign-in")}
               disabled={isLoading}
-              className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-200 transition-all duration-200 border border-gray-300"
+              className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 font-medium hover:bg-gray-200 transition-all duration-200 border border-gray-300"
             >
               Back to Sign In
             </button>
