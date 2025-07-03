@@ -14,29 +14,31 @@ import {
   ReceiptIcon,
   ArrowDownCircleIcon,
   DownloadIcon,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 
 const menuItems = [
-  { label: 'Dashboard', icon: <HomeIcon size={18} />, to: '/admin/dashboard' },
-  { label: 'New Memberships', icon: <UserPlusIcon size={18} />, count: 85, to: '/admin/newmembership' },
-  { label: 'Active Members', icon: <UsersIcon size={18} />, count: 343, to: '/admin/activemembers' },
-  { label: 'Generate Certificate', icon: <FileTextIcon size={18} />, count: 343, to: '/admin/generatecertificate' },
-  { label: 'Active Certificate', icon: <CheckCircle2Icon size={18} />, count: 481, to: '/admin/activecertificate' },
+  { label: 'Dashboard', icon: <HomeIcon size={20} />, to: '/admin/dashboard' },
+  { label: 'New Memberships', icon: <UserPlusIcon size={20} />, count: 85, to: '/admin/newmembership' },
+  { label: 'Active Members', icon: <UsersIcon size={20} />, count: 343, to: '/admin/activemembers' },
+  { label: 'Generate Certificate', icon: <FileTextIcon size={20} />, count: 343, to: '/admin/generatecertificate' },
+  { label: 'Active Certificate', icon: <CheckCircle2Icon size={20} />, count: 481, to: '/admin/activecertificate' },
   {
     label: 'Send Notice',
-    icon: <MailIcon size={18} />,
+    icon: <MailIcon size={20} />,
     count: 3,
     children: [
       { label: 'Send To Single User', icon: <MailIcon size={16} />, to: '/admin/sendtosingleuser' },
     ],
   },
-  { label: 'All Users Data', icon: <DatabaseIcon size={18} />, count: 430, to: '/admin/alluserdata' },
-  { label: 'Blocked Users', icon: <UserXIcon size={18} />, count: 2, to: '/admin/blockedusers' },
+  { label: 'All Users Data', icon: <DatabaseIcon size={20} />, count: 430, to: '/admin/alluserdata' },
+  { label: 'Blocked Users', icon: <UserXIcon size={20} />, count: 2, to: '/admin/blockedusers' },
   {
     label: 'Manager Section',
-    icon: <ShieldCheckIcon size={18} />,
+    icon: <ShieldCheckIcon size={20} />,
     count: 5,
     children: [
       { label: 'Add Manager', icon: <UserPlusIcon size={16} />, to: '/admin/addmanager' },
@@ -46,7 +48,7 @@ const menuItems = [
   },
   {
     label: 'Cash Donation',
-    icon: <DollarSignIcon size={18} />,
+    icon: <DollarSignIcon size={20} />,
     count: 2,
     children: [
       { label: 'Receive Donation', icon: <GiftIcon size={16} />, to: '/admin/receivedonation' },
@@ -55,17 +57,17 @@ const menuItems = [
   },
   {
     label: 'Visitor Certificate',
-    icon: <EyeIcon size={18} />,
+    icon: <EyeIcon size={20} />,
     count: 2,
     children: [
       { label: 'Generate Certificate', icon: <FileTextIcon size={16} />, to: '/admin/generatecertificate' },
       { label: 'Certificate', icon: <CheckCircle2Icon size={16} />, to: '/admin/certificate', count: 71 },
     ],
   },
-  { label: 'Visitor Donation', icon: <GiftIcon size={18} />, count: 79, to: '/admin/visitordonation' },
+  { label: 'Visitor Donation', icon: <GiftIcon size={20} />, count: 79, to: '/admin/visitordonation' },
   {
     label: 'All Receipts',
-    icon: <ReceiptIcon size={18} />,
+    icon: <ReceiptIcon size={20} />,
     count: 2,
     children: [
       { label: 'Membership Receipt', icon: <ReceiptIcon size={16} />, to: '/admin/membershipreceipt', count: 100 },
@@ -76,7 +78,7 @@ const menuItems = [
   },
   {
     label: 'Report Download',
-    icon: <ArrowDownCircleIcon size={18} />,
+    icon: <ArrowDownCircleIcon size={20} />,
     count: 4,
     children: [
       { label: 'New Memberships', icon: <DownloadIcon size={16} />, to: '/admin/newmemberships' },
@@ -86,101 +88,142 @@ const menuItems = [
       { label: 'Visitor Donation Receipt', icon: <DownloadIcon size={16} />, to: '/admin/visitordonationreceipt' },
     ],
   },
-  { label: 'Update Software', icon: <ArrowDownCircleIcon size={18} />, to: '/admin/updatesoftware' },
+  { label: 'Update Software', icon: <ArrowDownCircleIcon size={20} />, to: '/admin/updatesoftware' },
 ];
 
-const AdminSidebar = () => {
-  const [openIndex, setOpenIndex] = useState(null);
+const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
+  const [openMenus, setOpenMenus] = useState({});
 
   const handleToggle = (index) => {
-    setOpenIndex(prev => (prev === index ? null : index));
+    setOpenMenus(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   return (
-    <aside className="bg-[#1f2d3d] text-white w-72 h-screen flex flex-col">
-      <div className="flex items-center gap-3 px-4 py-4 text-lg font-bold bg-[#243447]">
-        <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
-        <span>Shri Ram Navyug Trust</span>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto">
-        {menuItems.map((item, index) => (
-          <div key={index}>
-            {/* Parent Menu Item */}
-            {item.children ? (
-              // For items with children (dropdown), only toggle the dropdown
-              <div
-                className={`flex justify-between items-center px-4 py-3 hover:bg-[#324055] text-base cursor-pointer ${
-                  openIndex === index ? 'bg-green-500 text-white' : ''
-                }`}
-                onClick={() => handleToggle(index)}
-              >
-                <div className="flex items-center gap-3">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-                {item.count !== undefined && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {item.count}
-                  </span>
-                )}
-              </div>
-            ) : (
-              // For items without children, make the entire row a NavLink
-              <NavLink
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex justify-between items-center px-4 py-3 hover:bg-[#324055] text-base ${
-                    isActive ? 'bg-green-500 text-white' : ''
-                  }`
-                }
-              >
-                <div className="flex items-center gap-3">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-                {item.count !== undefined && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {item.count}
-                  </span>
-                )}
-              </NavLink>
-            )}
-
-            {/* Dropdown Items */}
-            {item.children && openIndex === index && (
-              <div className="ml-8">
-                {item.children.map((child, childIdx) => (
-                  <NavLink
-                    to={child.to}
-                    key={childIdx}
-                    className={({ isActive }) =>
-                      `flex justify-between items-center px-4 py-2 hover:bg-[#2d3a4b] text-sm ${
-                        isActive ? 'bg-green-500 text-white' : ''
-                      }`
-                    }
-                  >
-                    <div className="flex items-center gap-2">
-                      {child.icon}
-                      <span>{child.label}</span>
-                    </div>
-                    {child.count !== undefined && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        {child.count}
-                      </span>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            )}
+    <>
+      <aside
+        className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-slate-900 via-blue-900 to-slate-800 transition-transform duration-300 ease-in-out`}
+      >
+        <div className="p-4 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-6 h-6 object-contain rounded-full"
+              />
+              <p className="text-white text-lg">Shri Ram Navyug Trust</p>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 hover:bg-slate-700/50 transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
           </div>
-        ))}
-      </nav>
+        </div>
 
-      <button className="mt-auto p-2 bg-[#2c3e50] hover:bg-[#34495e] text-sm text-center">
-        &lt;
-      </button>
-    </aside>
+        <nav className="mt-4 px-3 flex-1 overflow-y-auto">
+          {menuItems.map((item, index) => {
+            if (!item.children) {
+              return (
+                <NavLink
+                  key={index}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-4 py-3 mx-2 my-1 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 ${isActive
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                      : ""
+                    }`
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {item.icon}
+                    </div>
+                    <span className="font-medium text-sm">{item.label}</span>
+                  </div>
+                  {item.count !== undefined && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {item.count}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            } else {
+              return (
+                <div key={index} className="mx-2 my-1">
+                  <button
+                    onClick={() => handleToggle(index)}
+                    className="flex items-center justify-between px-4 py-3 w-full  text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {item.icon}
+                      </div>
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {item.count !== undefined && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          {item.count}
+                        </span>
+                      )}
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${openMenus[index] ? "rotate-180" : ""
+                          }`}
+                      />
+                    </div>
+                  </button>
+                  {openMenus[index] && (
+                    <div className="ml-8 mt-1 space-y-1">
+                      {item.children.map((child, childIdx) => (
+                        <NavLink
+                          key={childIdx}
+                          to={child.to}
+                          className={({ isActive }) =>
+                            `flex items-center justify-between py-2 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 ${isActive ? "text-blue-400 bg-blue-900/30" : ""
+                            }`
+                          }
+                        >
+                          <div className="flex items-center gap-2">
+                            {child.icon}
+                            <span>{child.label}</span>
+                          </div>
+                          {child.count !== undefined && (
+                            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                              {child.count}
+                            </span>
+                          )}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+          })}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50">
+          <div className="text-center">
+            <p className="text-xs text-blue-200/70">
+              © 2024 Shri Ram Navyug Trust
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

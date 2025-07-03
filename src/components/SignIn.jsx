@@ -107,7 +107,7 @@ const SignInForm = () => {
 
       setUser(userInfo);
 
-      // Show popup if available
+     
       if (setIsPopupOpen) {
         setIsPopupOpen(true);
       }
@@ -253,23 +253,7 @@ const SignInForm = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="keepLoggedIn"
-                name="keepLoggedIn"
-                checked={formData.keepLoggedIn}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                disabled={isLoading}
-              />
-              <label
-                htmlFor="keepLoggedIn"
-                className="ml-2 block text-sm text-gray-700"
-              >
-                Keep me logged in
-              </label>
-            </div>
+            
             {!isAdminEmail && (
               <Link
                 to="/forgot-password"
