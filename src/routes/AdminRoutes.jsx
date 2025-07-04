@@ -18,6 +18,8 @@ import BlockedManager from "../pages/admin/BlockedManager";
 import VisitorCertificate from "../pages/admin/VisitorCertificate";
 import MembershipReceipt from "../pages/admin/MembershipReceipt";
 import UserDonationReceipt from "../pages/admin/UserDonationReceipt";
+import MemberDetails from "../components/MemberDetails";
+
 
 
 const AdminRoutes = () => {
@@ -53,6 +55,8 @@ const AdminRoutes = () => {
 
       <Route path="membershipreceipt" element={<MembershipReceipt />} />
       <Route path="userdonationreceipt" element={<UserDonationReceipt/>} />
+
+      <Route path="memberdetails" element={<MemberDetails/>}/>
 
 
 
