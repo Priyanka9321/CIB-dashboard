@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { User, Phone, DollarSign, Building2, MapPin, CreditCard, ArrowLeft, Heart } from 'lucide-react';
+import {ToastContainer,  toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 
 const DonationForm = () => {
   const [formData, setFormData] = useState({
@@ -19,10 +23,35 @@ const DonationForm = () => {
     }));
   };
 
-  const handleDonate = () => {
-    console.log('Donation submitted:', formData);
-    alert('Thank you for your donation!');
-  };
+  const handleDonate = async () => {
+  try {
+    const response = await axios.post("http://localhost:5000/api/donations", {
+      name: formData.name,
+      mobile_number: formData.mobile,
+      amount: formData.amount,
+      bank_name: formData.bankName,
+      branch_name: formData.branchName,
+      pan_number: formData.panNo,
+    });
+
+    if (response.data.success) {
+      toast.success("Donation Submitted Successfully!");
+      setFormData({
+        name: '',
+        mobile: '',
+        amount: '',
+        bankName: '',
+        branchName: '',
+        panNo: ''
+      });
+    } else {
+      toast.error("Failed to submit donation . Please try again ");
+    }
+  } catch (error) {
+    toast.error("An error occurred while submitting the donation. Please try again later.");
+  }
+};
+
 
   const handleGoBack = () => {
     console.log('Going back...');
@@ -169,6 +198,7 @@ const DonationForm = () => {
             Your donation is secure and makes a real impact
           </p>
         </div>
+         <ToastContainer position="top-center" autoClose={3000} />
       </div>
     </div>
   );
