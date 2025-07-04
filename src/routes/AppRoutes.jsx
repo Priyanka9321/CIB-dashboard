@@ -10,7 +10,7 @@ import CongratulationsPopup from "../components/CongratulationsPopup";
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
-  console.log("User object:", user, "Loading:", loading); // Debug
+  
 
   if (loading) {
     return <div>Loading...</div>;
