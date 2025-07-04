@@ -160,7 +160,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   key={index}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-4 py-3 mx-2 my-1 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 ${isActive
+                    `flex items-center justify-between px-4 py-3 mx-2 my-1 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 ${isActive
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                       : ""
                     }`
@@ -184,7 +184,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <div key={index} className="mx-2 my-1">
                   <button
                     onClick={() => handleToggle(index)}
-                    className="flex items-center justify-between px-4 py-3 w-full rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    className="flex items-center justify-between px-4 py-3 w-full text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -211,7 +211,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           key={childIdx}
                           to={child.to}
                           className={({ isActive }) =>
-                            `flex items-center justify-between py-2 px-3 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 ${isActive ? "text-blue-400 bg-blue-900/30" : ""
+                            `flex items-center justify-between py-2 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 ${isActive ? "text-blue-400 bg-blue-900/30" : ""
                             }`
                           }
                         >
@@ -234,7 +234,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
           })}
         </nav>
 
-        <div className="mt-auto p-4 border-t">
+        <div className="mt-auto p-4 border-t border-white/20">
           <div className="text-center">
             <p className="text-xs text-blue-200/70">
               © 2024 Crime Investigation Bureau

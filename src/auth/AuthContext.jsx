@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userInfo);
         })
         .catch((err) => {
-          console.error("Failed to restore user:", err);
+         
           localStorage.removeItem("token");
           sessionStorage.removeItem("token");
           setUser(null);
