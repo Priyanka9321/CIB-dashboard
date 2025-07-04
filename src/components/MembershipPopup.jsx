@@ -9,8 +9,7 @@ export default function CongratulationsPopup() {
   };
 
   const handleApplyNow = () => {
-    // Handle apply now action
-    console.log('Apply Now clicked');
+    
     setIsOpen(false);
   };
 
@@ -19,7 +18,7 @@ export default function CongratulationsPopup() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
         <button 
           onClick={() => setIsOpen(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 font-medium transition-all duration-200"
         >
           Show Popup
         </button>

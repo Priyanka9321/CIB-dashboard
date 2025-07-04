@@ -1,15 +1,18 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
-const AuthContext = createContext();
+export const AuthContext = createContext(); 
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
   const baseURL = import.meta.env.VITE_BASE_URL;
+
   const logout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     setUser(null);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -33,12 +36,17 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("token");
           sessionStorage.removeItem("token");
           setUser(null);
+        })
+        .finally(() => {
+          setLoading(false);
         });
+    } else {
+      setLoading(false); 
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

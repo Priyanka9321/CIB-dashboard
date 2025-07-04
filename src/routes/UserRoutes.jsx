@@ -12,7 +12,6 @@ import DonationForm from "../pages/user/Donation";
 import MembershipReceipt from "../pages/user/MembershipReceipt";
 import DonationReceipt from "../pages/user/DonationReceipt";
 import MembershipRegistrationForm from "../pages/user/MembershipRegistrationForm";
-import SignUp from "../components/SignUp";
 import AppointmentLetter from "../pages/user/AppointmentLetter";
 
 const UserRoutes = () => {
