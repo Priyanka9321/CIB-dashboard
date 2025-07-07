@@ -1,164 +1,104 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const ActiveCertificate = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('http://localhost:5000/api/activecertificates', {
+          headers: {
+            'Content-Type': 'application/json',
+            // Add any required headers like Authorization if needed
+            // 'Authorization': `Bearer ${token}`
+          }
+        });
 
+        // Ensure response.data is an array
+        const fetchedData = Array.isArray(response.data.data) ? response.data.data : response.data || [];
 
-   const handleSubmit = (member) => {
+        // Map API response fields to expected fields
+        const mappedData = fetchedData.map(item => ({
+          id: item.userId || '',
+          name: item.fullName || '',
+          email: item.userEmail || '',
+          mobile: item.userMobile || '',
+          regNo: item.regNo || '',
+          regDate: item.regDate || '',
+          verifyDate: item.verifyDate || '',
+          status: item.status || '',
+          totalCertificates: item.totalCertificates || 0, // Default to 0 since not provided
+          createdAt: item.createdAt || '',
+          // Include other fields from previous sample data with defaults
+          fatherName: item.fatherName || 'N/A',
+          designation: item.designation || 'N/A',
+          dateOfBirth: item.dateOfBirth || 'N/A',
+          aadharCardNo: item.aadharCardNo || 'N/A',
+          address: item.address || 'N/A',
+          city: item.city || 'N/A',
+          occupation: item.occupation || 'N/A',
+          userType: item.userType || 'N/A',
+          verifiedBy: item.verifiedBy || 'N/A',
+          userProfile: item.userProfile || 'N/A'
+        }));
+
+        // Log the response for debugging
+        console.log('API Response:', fetchedData);
+        console.log('Mapped Data:', mappedData);
+
+        setData(mappedData);
+        setLoading(false);
+      } catch (err) {
+        console.error('API Error:', err);
+        setError('Failed to fetch data. Please try again later.');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSubmit = (member) => {
     navigate('/admin/memberdetails', { state: { member } });
-  }
-
-  // Sample data - matches your screenshot
-  const [data, setData] = useState([
-     {
-      id: 361,
-      regNo: 'MBR-10',
-      name: 'Chandu',
-      email: 'chandu.sannepogu@gmail.com',
-      mobile: '9133949509',
-      regDate: '11-10-2024',
-      verifyDate: '11-10-2024',
-      status: 'Active',
-      fatherName: 'Mr. Sannepogu',
-      designation: 'Engineer',
-      dateOfBirth: '01-01-1995',
-      aadharCardNo: '1234-5678-9012',
-      address: 'Hyderabad, Telangana',
-      city: 'Hyderabad',
-      occupation: 'Software Developer',
-      userType: 'User',
-      verifiedBy: 'Admin',
-      userProfile: ''
-    }
-    
-    // {
-    //   id: 362,
-    //   regNo: 'MBR-9',
-    //   name: 'Mohit kumar',
-    //   email: 'kumarmohit63399@gmail.com',
-    //   mobile: '9341125223',
-    //   regDate: '11-10-2024',
-    //   verifyDate: '11-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 0
-    // },
-    // {
-    //   id: 363,
-    //   regNo: 'MBR-7',
-    //   name: 'test',
-    //   email: 'test1@gmail.com',
-    //   mobile: '1111111111',
-    //   regDate: '10-10-2024',
-    //   verifyDate: '10-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 1
-    // },
-    // // Additional sample data to demonstrate pagination
-    // {
-    //   id: 364,
-    //   regNo: 'MBR-6',
-    //   name: 'John Doe',
-    //   email: 'john.doe@gmail.com',
-    //   mobile: '9876543210',
-    //   regDate: '09-10-2024',
-    //   verifyDate: '09-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 2
-    // },
-    // {
-    //   id: 365,
-    //   regNo: 'MBR-5',
-    //   name: 'Jane Smith',
-    //   email: 'jane.smith@gmail.com',
-    //   mobile: '8765432109',
-    //   regDate: '08-10-2024',
-    //   verifyDate: '08-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 5
-    // },
-    // {
-    //   id: 366,
-    //   regNo: 'MBR-4',
-    //   name: 'Bob Johnson',
-    //   email: 'bob.johnson@gmail.com',
-    //   mobile: '7654321098',
-    //   regDate: '07-10-2024',
-    //   verifyDate: '07-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 1
-    // },
-    // {
-    //   id: 367,
-    //   regNo: 'MBR-3',
-    //   name: 'Alice Brown',
-    //   email: 'alice.brown@gmail.com',
-    //   mobile: '6543210987',
-    //   regDate: '06-10-2024',
-    //   verifyDate: '06-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 4
-    // },
-    // {
-    //   id: 368,
-    //   regNo: 'MBR-2',
-    //   name: 'Charlie Davis',
-    //   email: 'charlie.davis@gmail.com',
-    //   mobile: '5432109876',
-    //   regDate: '05-10-2024',
-    //   verifyDate: '05-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 0
-    // },
-    // {
-    //   id: 369,
-    //   regNo: 'MBR-1',
-    //   name: 'Diana Wilson',
-    //   email: 'diana.wilson@gmail.com',
-    //   mobile: '4321098765',
-    //   regDate: '04-10-2024',
-    //   verifyDate: '04-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 3
-    // },
-    // {
-    //   id: 370,
-    //   regNo: 'MBR-0',
-    //   name: 'Edward Miller',
-    //   email: 'edward.miller@gmail.com',
-    //   mobile: '3210987654',
-    //   regDate: '03-10-2024',
-    //   verifyDate: '03-10-2024',
-    //   status: 'Active',
-    //   totalCertificates: 2
-    // }
-  ]);
+  };
 
   // Filter data based on search
   const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
     if (!searchTerm) return data;
+
     return data.filter(item => 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.regNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.mobile.includes(searchTerm)
+      item &&
+      (item.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+       item.email?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+       item.regNo?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+       item.mobile?.toString()?.includes(searchTerm))
     );
   }, [data, searchTerm]);
 
   // Sort data
   const sortedData = useMemo(() => {
+    if (!Array.isArray(filteredData)) return [];
+
     if (!sortConfig.key) return filteredData;
     
     return [...filteredData].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
+      const aValue = a?.[sortConfig.key];
+      const bValue = b?.[sortConfig.key];
       
+      if (aValue === undefined || bValue === undefined) return 0;
       if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -166,10 +106,10 @@ const ActiveCertificate = () => {
   }, [filteredData, sortConfig]);
 
   // Pagination
-  const totalPages = Math.ceil(sortedData.length / entriesPerPage);
+  const totalPages = Math.ceil((Array.isArray(sortedData) ? sortedData.length : 0) / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
   const endIndex = startIndex + entriesPerPage;
-  const currentData = sortedData.slice(startIndex, endIndex);
+  const currentData = Array.isArray(sortedData) ? sortedData.slice(startIndex, endIndex) : [];
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -240,6 +180,22 @@ const ActiveCertificate = () => {
     return pages;
   };
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-sm">
@@ -273,7 +229,7 @@ const ActiveCertificate = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
-              placeholder=""
+              placeholder="Search by name, email, reg no, or mobile"
             />
           </div>
         </div>
@@ -387,41 +343,52 @@ const ActiveCertificate = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {currentData.map((item, index) => (
-                <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div>
-                      <div className="font-medium">{item.regNo} / {item.name} / {item.email} / {item.mobile}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.regDate}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.verifyDate}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button 
-                    onClick={() => handleSubmit(item)} 
-                    className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
-                      View
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className="bg-green-500 text-white px-3 py-1 rounded text-xs">
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
-                      Total {item.totalCertificates}
-                    </button>
+              {currentData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                    No data available
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentData.map((item, index) => (
+                  <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div>
+                        <div className="font-medium">
+                          {item.regNo} / {item.name} / {item.email} / {item.mobile}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.regDate}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.verifyDate}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button 
+                        onClick={() => handleSubmit(item)} 
+                        className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
+                      >
+                        View
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className="bg-green-500 text-white px-3 py-1 rounded text-xs">
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                        Total {item.totalCertificates}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

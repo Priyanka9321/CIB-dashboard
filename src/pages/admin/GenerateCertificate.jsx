@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import GenerateForm from '../../components/GenerateForm'; // Adjust the import path as necessary
 
 const GenerateCertificate = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -12,6 +13,8 @@ const GenerateCertificate = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [isGenerateFormOpen, setIsGenerateFormOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   // Fetch data from API using Axios
   useEffect(() => {
@@ -44,6 +47,11 @@ const GenerateCertificate = () => {
 
   const handleSubmit = (member) => {
     navigate('/admin/memberdetails', { state: { member } });
+  };
+
+  const handleGenerateClick = (member) => {
+    setSelectedMember(member);
+    setIsGenerateFormOpen(true);
   };
 
   // Filter data based on search
@@ -120,8 +128,8 @@ const GenerateCertificate = () => {
           key={i}
           onClick={() => handlePageChange(i)}
           className={`px-3 py-1 border rounded ${i === currentPage
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+            ? 'bg-blue-500 text-white border-blue-500'
+            : 'border-gray-300 text-gray-600 hover:bg-gray-100'
             }`}
         >
           {i}
@@ -327,7 +335,9 @@ const GenerateCertificate = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                    <button
+                      onClick={() => handleGenerateClick(item)}
+                      className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
                       Generate
                     </button>
                   </td>
@@ -346,6 +356,18 @@ const GenerateCertificate = () => {
             {renderPagination()}
           </div>
         </div>
+
+        {isGenerateFormOpen && (
+          <GenerateForm
+            memberId={selectedMember?.id}
+            onClose={() => setIsGenerateFormOpen(false)}
+            onGenerate={(certificateData) => {
+              console.log('Generating certificate:', certificateData);
+              setIsGenerateFormOpen(false);
+            }}
+          />
+
+        )}
       </div>
     </div>
   );
