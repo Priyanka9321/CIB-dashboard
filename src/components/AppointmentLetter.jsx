@@ -72,32 +72,212 @@
 // fetching user data like name, image, fatherName, and uniqueId from a backend API
 
 
+// updated by sumit 1
 
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState } from "react";
+
+// const AppointmentLetter = () => {
+//   const [userData, setUserData] = useState(null);
+
+//   useEffect(() => {
+//     // Mock user data
+//     const mockData = {
+//       name: "Farah Naaz Anjum",
+//       fatherName: "Mohmmed Abdul Majeed",
+//       imageUrl: "https://via.placeholder.com/120x150", 
+//       uniqueId: "CIB0001",
+//       validUpto: "26/03/2026",
+//     };
+//     setUserData(mockData);
+//   }, []);
+
+//   if (!userData) return <p className="text-center mt-10">Loading...</p>;
+
+//   const { name, fatherName, imageUrl, uniqueId, validUpto } = userData;
+
+//   return (
+//     <div className="max-w-3xl mx-auto bg-white my-10 p-6 shadow-md text-[15px] leading-relaxed font-[Georgia]">
+//       {/*  Download Button (Top-Right) */}
+//       <div className="absolute top-30 right-10 print:hidden ">
+//         <button
+//           onClick={() => window.print()}
+//           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm cursor-pointer"
+//         >
+//           Download / Print
+//         </button>
+//       </div>
+//       {/* Header with logo */}
+//       <div className="flex justify-between items-start">
+//         {/* Logo Left */}
+//         <img
+//           src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Badge_of_the_Indian_Police_Service.svg/1200px-Badge_of_the_Indian_Police_Service.svg.png"
+//           alt="Logo"
+//           className="w-28"
+//         />
+
+//         {/* Date + Photo Right */}
+//         <div className="text-right text-sm mt-2 flex flex-col items-end space-y-2">
+//           <div>
+//             <p>
+//               <strong>Ref:-</strong>
+//             </p>
+//             <p>
+//               <strong>Date:-</strong> {new Date().toLocaleDateString()}
+//             </p>
+//           </div>
+//           <img
+//             src={imageUrl}
+//             alt="User"
+//             className="w-24 h-32 object-cover border p-1 shadow"
+//           />
+//         </div>
+//       </div>
+
+//       {/* Recipient */}
+//       <div className="mt-4">
+//         <p className="font-bold">TO,</p>
+//         <p className="ml-4">{name?.toUpperCase()}</p>
+//         <p className="ml-4">W/O {fatherName?.toUpperCase()}</p>
+//       </div>
+
+//       {/* Title */}
+//       <h1 className="text-center text-blue-600 font-bold text-xl underline mt-4">
+//         Appointment Letter
+//       </h1>
+
+//       {/* Body */}
+//       <div className="mt-4">
+//         <p>Dear {name.split(" ")[0]},</p>
+//         <p className="mt-2 indent-6">
+//           We are pleased to appoint you as the{" "}
+//           <strong>State Director, Andhra Pradesh</strong>, without salary base.
+//           We are confident that you shall be able to Crime & Corruption control
+//           with Co-operate with Central/State Government and Judiciary. You
+//           authorized to Research and provide secret information about Crime,
+//           Corruption, Anti Nation Activity, Smuggling, Fake Currency, Bonded
+//           Labour, Child Labour to Central Government, State Government, Police
+//           administration and protect Human Rights, Citizen Rights, Education
+//           Rights, Child Rights, Labour Rights, Women Rights, Fundamental Rights,
+//           Senior Citizen Rights, Disability Rights, Consumer Rights, Rights to
+//           Information (RTI) and all those Rights of aggrieved and tortured
+//           person within judicious framework in accordance with the provisions of
+//           Indian Constitution & Bye laws of organization.
+//         </p>
+
+//         <p className="italic text-center text-[16px] font-semibold mt-3">
+//           “Criminals should be Punished Not Fed Pastries”
+//         </p>
+
+//         <p className="mt-3 indent-6">
+//           Further we would like to advise you start your work with the feeling
+//           as to help the human and needy wherever required as to establish and
+//           effective and positive of our organization to fulfill the Human Rights
+//           & Social Justice and Co-operate government to making our Company as{" "}
+//           <strong>“Crime Free Nation”</strong>.
+//         </p>
+
+//         <p className="mt-3">
+//           Be Informed that you have sent timely Activity Report to Head Office
+//           on Regular Basis.
+//         </p>
+
+//         <p className="mt-1">
+//           All Police Officers, Public Relation Division and Government Agencies
+//           are humbly Requested to Co-operate with his/her Unique ID –{" "}
+//           <strong>{uniqueId}</strong>, Valid up to <strong>{validUpto}</strong>.
+//         </p>
+//       </div>
+
+//       {/* Profile Image and stamp/signature */}
+//       <div className="flex justify-end items-end mt-8">
+//         <div className="text-right">
+//           <img
+//             src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Approved_Stamp_Vector.svg/1200px-Approved_Stamp_Vector.svg.png"
+//             alt="Stamp"
+//             className="w-20 mx-auto mb-1"
+//           />
+//           <p className="font-bold">Authorized Signatory</p>
+//         </div>
+//       </div>
+
+//       {/* Copy to section */}
+//       <div className="mt-6">
+//         <p className="font-bold">Copy to Information:-</p>
+//         <ul className="list-disc list-inside">
+//           <li>
+//             Senior Superintendent of Police, Bodhan, Nizamabad, Andhra Pradesh.
+//           </li>
+//           <li>Police Station Incharge, Bodhan, Nizamabad, Andhra Pradesh.</li>
+//         </ul>
+//       </div>
+
+//       {/* Footer Info */}
+//       <div className="mt-6 text-[13px]">
+//         <p>
+//           Authenticity of members can be verified at{" "}
+//           <a href="https://www.cib.org.in" className="text-blue-600 underline">
+//             www.cib.org.in
+//           </a>
+//         </p>
+//         <p className="mt-1">
+//           CIB is not Responsible, if any type of Illegal activity done by
+//           Members. Members are mandatory to renew the ID card within 30 days of
+//           card expiry date. After crossing the due date, late fee is applicable.
+//           Headquarters always reserves the rights to terminate Membership If the
+//           ID card is not renewed within 60 days prior to the expiry date.
+//         </p>
+//       </div>
+
+//       {/* Office Info Footer */}
+//       <div className="mt-8 text-center text-sm border-t pt-2 text-gray-700">
+//         <p>
+//           <strong>Office:-</strong> 301, Shanti Heritage Apartment, Rukunpura,
+//           Baily Road, Patna-800014 (Bihar)
+//         </p>
+//         <p>
+//           <a href="https://www.cib.org.in" className="text-blue-600 underline">
+//             www.cib.org.in
+//           </a>{" "}
+//           | Email: <span className="underline">info@cib.org.in</span>
+//         </p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default AppointmentLetter;
+
+
+// updated by sumit 2
+
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const AppointmentLetter = () => {
-  const [userData, setUserData] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const userData = location.state;
 
-  useEffect(() => {
-    // Mock user data
-    const mockData = {
-      name: "Farah Naaz Anjum",
-      fatherName: "Mohmmed Abdul Majeed",
-      imageUrl: "https://via.placeholder.com/120x150", // Replace with actual profile photo
-      uniqueId: "CIB0001",
-      validUpto: "26/03/2026",
-    };
-    setUserData(mockData);
-  }, []);
-
-  if (!userData) return <p className="text-center mt-10">Loading...</p>;
+  if (!userData) {
+    return (
+      <div className="text-center mt-10">
+        <p className="text-red-500">No data found. Please return to members page.</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   const { name, fatherName, imageUrl, uniqueId, validUpto } = userData;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white my-10 p-6 shadow-md text-[15px] leading-relaxed font-[Georgia]">
-      {/*  Download Button (Top-Right) */}
-      <div className="absolute top-30 right-10 print:hidden ">
+    <div className="max-w-3xl mx-auto bg-white my-10 p-6 shadow-md text-[15px] leading-relaxed font-[Georgia] relative">
+      {/* Download / Print Button */}
+      <div className="absolute top-6 right-6 print:hidden">
         <button
           onClick={() => window.print()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm cursor-pointer"
@@ -105,16 +285,15 @@ const AppointmentLetter = () => {
           Download / Print
         </button>
       </div>
+
       {/* Header with logo */}
       <div className="flex justify-between items-start">
-        {/* Logo Left */}
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Badge_of_the_Indian_Police_Service.svg/1200px-Badge_of_the_Indian_Police_Service.svg.png"
           alt="Logo"
           className="w-28"
         />
 
-        {/* Date + Photo Right */}
         <div className="text-right text-sm mt-2 flex flex-col items-end space-y-2">
           <div>
             <p>
@@ -125,7 +304,7 @@ const AppointmentLetter = () => {
             </p>
           </div>
           <img
-            src={imageUrl}
+            src={imageUrl || "https://via.placeholder.com/120x150"}
             alt="User"
             className="w-24 h-32 object-cover border p-1 shadow"
           />
@@ -146,7 +325,7 @@ const AppointmentLetter = () => {
 
       {/* Body */}
       <div className="mt-4">
-        <p>Dear {name.split(" ")[0]},</p>
+        <p>Dear {name?.split(" ")[0]},</p>
         <p className="mt-2 indent-6">
           We are pleased to appoint you as the{" "}
           <strong>State Director, Andhra Pradesh</strong>, without salary base.
@@ -187,7 +366,7 @@ const AppointmentLetter = () => {
         </p>
       </div>
 
-      {/* Profile Image and stamp/signature */}
+      {/* Stamp & Signature */}
       <div className="flex justify-end items-end mt-8">
         <div className="text-right">
           <img
@@ -199,7 +378,7 @@ const AppointmentLetter = () => {
         </div>
       </div>
 
-      {/* Copy to section */}
+      {/* Copy to */}
       <div className="mt-6">
         <p className="font-bold">Copy to Information:-</p>
         <ul className="list-disc list-inside">

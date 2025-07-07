@@ -176,55 +176,49 @@
 
 // export default GenerateIdCard;
 
+// updated by sumit 
+
 import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { useLocation } from "react-router-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Download, Printer } from "lucide-react";
+import axios from "axios";
 
 const GenerateIdCard = () => {
-  const [userInfo, setUserInfo] = useState(null);
+  const location = useLocation();
+  const passedMember = location.state; // from navigate(..., { state: member })
+
+  const [userInfo, setUserInfo] = useState(passedMember || null);
   const [qrImage, setQrImage] = useState(null);
   const cardRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await axios.get(
-          "http://localhost:5000/api/v1/auth/my-idcard"
-        );
-        setUserInfo(userRes.data);
-
-        const qrRes = await axios.get(
-          `http://localhost:5000/api/v1/qr/generate?uniqueId=${userRes.data.uniqueId}`,
-          { responseType: "arraybuffer" } // receive binary buffer
-        );
-
-        const base64Qr = `data:image/png;base64,${btoa(
-          new Uint8Array(qrRes.data).reduce(
-            (data, byte) => data + String.fromCharCode(byte),
-            ""
-          )
-        )}`;
-
-        setQrImage(base64Qr);
+        if (!passedMember) {
+          const res = await axios.get("http://localhost:5000/api/v1/auth/my-idcard");
+          setUserInfo(res.data);
+        }
       } catch (err) {
-        console.error("Error loading user or QR code:", err);
+        console.error("Failed to fetch user ID card:", err);
       }
     };
 
     fetchData();
-  }, []);
+  }, [passedMember]);
+
+  useEffect(() => {
+    if (userInfo?.uniqueId) {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${userInfo.uniqueId}`;
+      setQrImage(qrUrl);
+    }
+  }, [userInfo]);
 
   const downloadPDF = async () => {
     const card = cardRef.current;
-
-    // Wait briefly to allow images to fully render
     setTimeout(async () => {
-      const canvas = await html2canvas(card, {
-        useCORS: true, // for external images like QR
-        scale: 2, // higher quality
-      });
+      const canvas = await html2canvas(card, { useCORS: true, scale: 2 });
       const imgData = canvas.toDataURL("image/png");
 
       const pdf = new jsPDF({
@@ -235,7 +229,7 @@ const GenerateIdCard = () => {
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
       pdf.save("CIB-ID-Card.pdf");
-    }, 300); // 300ms delay to ensure rendering complete
+    }, 300);
   };
 
   const printCard = () => {
@@ -265,26 +259,18 @@ const GenerateIdCard = () => {
   return (
     <div className="flex flex-col items-center px-4 py-6">
       {/* ID Card */}
-      <div
-        ref={cardRef}
-        className="bg-white  rounded-lg shadow-2xl w-[90vw] max-w-[350px]"
-      >
+      <div ref={cardRef} className="bg-white rounded-lg shadow-2xl w-[90vw] max-w-[350px]">
         <div className="h-2 bg-gradient-to-r from-red-600 to-blue-600" />
 
         {/* Header */}
         <div className="flex items-center justify-center p-4 bg-white border-b-2 border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-20 h-20  overflow-hidden flex items-start justify-items-start">
-              <img
-                src="/favicon.ico"
-                alt="CIB Logo"
-                className="w-full h-full object-contain"
-              />
+            <div className="w-20 h-20 overflow-hidden">
+              <img src="/favicon.ico" alt="CIB Logo" className="w-full h-full object-contain" />
             </div>
-
             <div className="text-center">
-              <h1 className="text-7xl font-black text-red-600">
-                <span style={{ letterSpacing: '0.6em' }}>CIB</span>
+              <h1 className="text-7xl font-black text-red-600" style={{ letterSpacing: '0.6em' }}>
+                CIB
               </h1>
               <p className="text-xs font-bold text-blue-800 me-8">
                 CRIME INVESTIGATION BUREAU
@@ -304,26 +290,14 @@ const GenerateIdCard = () => {
         {/* Photo and QR */}
         <div className="flex justify-between items-start p-4 bg-white">
           <div className="border-2 border-black">
-            <img
-              src={userInfo.photo}
-              alt="Profile"
-              className="w-24 h-32 object-cover"
-            />
+            <img src={userInfo.photo} alt="Profile" className="w-24 h-32 object-cover" />
           </div>
           <div className="border border-black">
-            {/* <div className="border border-black">
-              {qrImage ? (
-                <img src={qrImage} alt="QR Code" className="w-20 h-20" />
-              ) : (
-                <p>Loading QR...</p>
-              )}
-            </div> */}
-
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${userInfo.uniqueId}`}
-              alt="QR Code"
-              className="w-20 h-20"
-            />
+            {qrImage ? (
+              <img src={qrImage} alt="QR Code" className="w-20 h-20" />
+            ) : (
+              <p className="text-xs p-1">Loading QR...</p>
+            )}
           </div>
         </div>
 
@@ -342,26 +316,20 @@ const GenerateIdCard = () => {
               <span className="w-24 font-medium capitalize">
                 {key.replace(/([A-Z])/g, " $1")}
               </span>
-              <span className="text-black">: {userInfo[key]}</span>
+              <span className="text-black">: {userInfo[key] || "N/A"}</span>
             </div>
           ))}
         </div>
 
-        {/* Footer Notes */}
-        <div className="bg-gradient-to-br from-red-600 to-blue-600 px-4 pb-4 space-y-1 text-xs font-medium">
-          <div className=" text-white px-3 py-2 rounded">
-            ● NGO Registration Under Indian Trust Act.
-          </div>
-          <div className=" text-white px-3 py-2 rounded">
-            ● Registration by NITI Aayog under NGO Darpan
-          </div>
-          <div className=" text-white px-3 py-2 rounded">
-            ● Registration by Ministry of MSME under UDYAM
-          </div>
+        {/* Footer */}
+        <div className="bg-gradient-to-br from-red-600 to-blue-600 px-4 pb-4 space-y-1 text-xs font-medium text-white">
+          <div className="px-3 py-2">● NGO Registration Under Indian Trust Act.</div>
+          <div className="px-3 py-2">● Registration by NITI Aayog under NGO Darpan</div>
+          <div className="px-3 py-2">● Registration by Ministry of MSME under UDYAM</div>
         </div>
       </div>
 
-      {/* Buttons */}
+      {/* Action Buttons */}
       <div className="flex gap-4 mt-6">
         <button
           onClick={downloadPDF}
@@ -383,3 +351,4 @@ const GenerateIdCard = () => {
 };
 
 export default GenerateIdCard;
+
