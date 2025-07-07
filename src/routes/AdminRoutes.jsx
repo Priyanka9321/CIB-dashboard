@@ -19,6 +19,9 @@ import VisitorCertificate from "../pages/admin/VisitorCertificate";
 import MembershipReceipt from "../pages/admin/MembershipReceipt";
 import UserDonationReceipt from "../pages/admin/UserDonationReceipt";
 import MemberDetails from "../components/MemberDetails";
+import AppointmentLetter from "../components/AppointmentLetter";
+import GenerateIdCard from "../components/GenerateIdCard";
+import AdminReceipt from "../components/AdminReceipt";
 
 
 
@@ -56,7 +59,13 @@ const AdminRoutes = () => {
       <Route path="membershipreceipt" element={<MembershipReceipt />} />
       <Route path="userdonationreceipt" element={<UserDonationReceipt/>} />
 
-      <Route path="memberdetails" element={<MemberDetails/>}/>
+      <Route path="member-details" element={<MemberDetails />} />
+      <Route path="appointment-letter" element={<AppointmentLetter />} />
+      <Route path="id-card" element={<GenerateIdCard />} />
+      <Route path="membership-receipt" element={<AdminReceipt />} />
+
+
+
 
 
 
