@@ -251,96 +251,99 @@ const MembershipRegistrationForm = () => {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (checkIfFormEmpty()) {
-      setShowAllFieldsError(true);
-      showToast("All required fields must be filled!", "error");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+  if (checkIfFormEmpty()) {
+    setShowAllFieldsError(true);
+    showToast("All required fields must be filled!", "error");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
 
-    setShowAllFieldsError(false);
+  setShowAllFieldsError(false);
 
-    if (!validateForm()) {
-      showToast("Please fix the errors in the form before submitting.", "error");
-      return;
-    }
+  if (!validateForm()) {
+    showToast("Please fix the errors in the form before submitting.", "error");
+    return;
+  }
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key !== "profilePic" && key !== "signature") {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-      if (formData.profilePic) {
-        console.log("Uploading profilePic:", formData.profilePic);
-        formDataToSend.append("photoPath", formData.profilePic);
-      } else {
-        showToast("Profile picture is required!", "error");
-        setIsLoading(false);
-        return;
+  try {
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (key !== "profilePic" && key !== "signature") {
+        formDataToSend.append(key, formData[key]);
       }
-      if (formData.signature) {
-        console.log("Uploading signature:", formData.signature);
-        formDataToSend.append("signaturePath", formData.signature);
-      }
-
-      // Log FormData contents
-      console.log("FormData contents:");
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value instanceof File ? value.name : value);
-      }
-
-      const response = await fetch(`${baseURL}/auth/registerform`, {
-        method: "POST",
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Server response:", errorText);
-        throw new Error(`Server returned ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      showToast("Membership Registration submitted successfully!", "success", {
-        form: result.downloadForm,
-        idCard: result.downloadIDCard,
-      });
-
-      // Reset form
-      setFormData({
-        fullName: "",
-        fatherName: "",
-        email: "",
-        mobileNo: "",
-        qualification: "",
-        dob: "",
-        uniqueId: "",
-        address: "",
-        memberDivision: "",
-        memberWorkLocation: "",
-        validTill: "",
-        bloodGroup: "",
-        memberDesignation: "",
-        profilePic: null,
-        signature: null,
-        formType: "membership",
-      });
-      setProfilePreview(null);
-      setSignaturePreview(null);
-      setErrors({});
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      showToast(`Failed to submit registration: ${error.message}`, "error");
-    } finally {
+    });
+    if (formData.profilePic) {
+      console.log("Uploading profilePic:", formData.profilePic);
+      formDataToSend.append("photoPath", formData.profilePic);
+    } else {
+      showToast("Profile picture is required!", "error");
       setIsLoading(false);
+      return;
     }
-  };
+    if (formData.signature) {
+      console.log("Uploading signature:", formData.signature);
+      formDataToSend.append("signaturePath", formData.signature);
+    }
+
+    // Log FormData contents
+    console.log("FormData contents:");
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log(`${key}:`, value instanceof File ? value.name : value);
+    }
+
+    const response = await fetch(`${baseURL}/auth/registerform`, {
+      method: "POST",
+      body: formDataToSend,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Server response:", errorData);
+      if (errorData.message === "Aadhar number already exists" || errorData.message === "Aadhar number already exists in member forms" || errorData.message === "Aadhar number already exists in ID cards") {
+        throw new Error("The provided Aadhar number is already registered.");
+      }
+      throw new Error(`Server returned ${response.status}: ${errorData.message}`);
+    }
+
+    const result = await response.json();
+    showToast("Membership Registration submitted successfully!", "success", {
+      form: result.downloadForm,
+      idCard: result.downloadIDCard,
+    });
+
+    // Reset form
+    setFormData({
+      fullName: "",
+      fatherName: "",
+      email: "",
+      mobileNo: "",
+      qualification: "",
+      dob: "",
+      uniqueId: "",
+      address: "",
+      memberDivision: "",
+      memberWorkLocation: "",
+      validTill: "",
+      bloodGroup: "",
+      memberDesignation: "",
+      profilePic: null,
+      signature: null,
+      formType: "membership",
+    });
+    setProfilePreview(null);
+    setSignaturePreview(null);
+    setErrors({});
+  } catch (error) {
+    console.error("Error submitting form:", error);
+    showToast(error.message, "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       {toast && (
