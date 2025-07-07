@@ -15,23 +15,32 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  Droplet,
 } from "lucide-react";
 
-const Toast = ({ message, type, onClose }) => {
-  const bgColor = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
-  const Icon = type === 'success' ? CheckCircle : AlertCircle;
-  
+const Toast = ({ message, type, onClose, downloadLinks }) => {
+  const bgColor = type === "success" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800";
+  const Icon = type === "success" ? CheckCircle : AlertCircle;
+
   return (
     <div className={`fixed top-4 right-4 ${bgColor} border px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm`}>
       <div className="flex items-center">
         <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-medium">{message}</p>
+          {downloadLinks && (
+            <div className="mt-2">
+              <a href={downloadLinks.form} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                Download Form PDF
+              </a>
+              <br />
+              <a href={downloadLinks.idCard} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                Download ID Card PDF
+              </a>
+            </div>
+          )}
         </div>
-        <button
-          onClick={onClose}
-          className="ml-3 flex-shrink-0 text-gray-400 hover:text-gray-600"
-        >
+        <button onClick={onClose} className="ml-3 flex-shrink-0 text-gray-400 hover:text-gray-600">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -40,21 +49,28 @@ const Toast = ({ message, type, onClose }) => {
 };
 
 const MembershipRegistrationForm = () => {
+  const baseURL = import.meta.env.VITE_BASE_URL;
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     fatherName: "",
     email: "",
-    mobile: "",
-    occupation: "",
-    dateOfBirth: "",
-    aadharNo: "",
+    mobileNo: "",
+    qualification: "",
+    dob: "",
+    uniqueId: "",
     address: "",
-    city: "",
-    designation: "",
+    memberDivision: "",
+    memberWorkLocation: "",
+    validTill: "",
+    bloodGroup: "",
+    memberDesignation: "",
     profilePic: null,
+    signature: null,
+    formType: "membership", // Default value, adjust as needed
   });
 
   const [profilePreview, setProfilePreview] = useState(null);
+  const [signaturePreview, setSignaturePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showAllFieldsError, setShowAllFieldsError] = useState(false);
@@ -72,11 +88,23 @@ const MembershipRegistrationForm = () => {
     { value: "social-worker", label: "Social Worker" },
   ];
 
-  const showToast = (message, type) => {
-    setToast({ message, type });
+  const bloodGroupOptions = [
+    { value: "", label: "Select Blood Group" },
+    { value: "A+", label: "A+" },
+    { value: "A-", label: "A-" },
+    { value: "B+", label: "B+" },
+    { value: "B-", label: "B-" },
+    { value: "AB+", label: "AB+" },
+    { value: "AB-", label: "AB-" },
+    { value: "O+", label: "O+" },
+    { value: "O-", label: "O-" },
+  ];
+
+  const showToast = (message, type, downloadLinks = null) => {
+    setToast({ message, type, downloadLinks });
     setTimeout(() => {
       setToast(null);
-    }, 5000);
+    }, 10000); // Increased timeout to allow downloading PDFs
   };
 
   const closeToast = () => {
@@ -90,7 +118,6 @@ const MembershipRegistrationForm = () => {
       [name]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -98,13 +125,12 @@ const MembershipRegistrationForm = () => {
       }));
     }
 
-    // Clear all fields error when user starts filling form
     if (showAllFieldsError) {
       setShowAllFieldsError(false);
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, field) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file size (max 5MB)
@@ -112,65 +138,73 @@ const MembershipRegistrationForm = () => {
         const errorMsg = "File size should be less than 5MB";
         setErrors((prev) => ({
           ...prev,
-          profilePic: errorMsg,
+          [field]: errorMsg,
         }));
-        showToast(errorMsg, 'error');
+        showToast(errorMsg, "error");
         return;
       }
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         const errorMsg = "Please select a valid image file";
         setErrors((prev) => ({
           ...prev,
-          profilePic: errorMsg,
+          [field]: errorMsg,
         }));
-        showToast(errorMsg, 'error');
+        showToast(errorMsg, "error");
         return;
       }
 
       setFormData((prev) => ({
         ...prev,
-        profilePic: file,
+        [field]: file,
       }));
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePreview(reader.result);
+        if (field === "profilePic") {
+          setProfilePreview(reader.result);
+        } else if (field === "signature") {
+          setSignaturePreview(reader.result);
+        }
       };
       reader.readAsDataURL(file);
 
-      // Clear error
-      if (errors.profilePic) {
+      if (errors[field]) {
         setErrors((prev) => ({
           ...prev,
-          profilePic: "",
+          [field]: "",
         }));
       }
 
-      // Clear all fields error when user adds profile pic
       if (showAllFieldsError) {
         setShowAllFieldsError(false);
       }
 
-      showToast("Profile picture uploaded successfully!", 'success');
+      showToast(`${field === "profilePic" ? "Profile picture" : "Signature"} uploaded successfully!`, "success");
     }
   };
 
   const checkIfFormEmpty = () => {
     const requiredFields = [
-      'name', 'fatherName', 'email', 'mobile', 'occupation', 
-      'dateOfBirth', 'aadharNo', 'address', 'city', 'designation'
+      "fullName",
+      "fatherName",
+      "email",
+      "mobileNo",
+      "qualification",
+      "dob",
+      "uniqueId",
+      "address",
+      "memberDesignation",
     ];
-    
-    return requiredFields.every(field => !formData[field]?.toString().trim());
+    return requiredFields.every((field) => !formData[field]?.toString().trim());
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "Name is required";
     }
 
     if (!formData.fatherName.trim()) {
@@ -183,130 +217,164 @@ const MembershipRegistrationForm = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (!formData.mobile.trim()) {
-      newErrors.mobile = "Mobile number is required";
-    } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ''))) {
-      newErrors.mobile = "Please enter a valid 10-digit mobile number";
+    if (!formData.mobileNo.trim()) {
+      newErrors.mobileNo = "Mobile number is required";
+    } else if (!/^\d{10}$/.test(formData.mobileNo.replace(/\D/g, ""))) {
+      newErrors.mobileNo = "Please enter a valid 10-digit mobile number";
     }
 
-    if (!formData.occupation.trim()) {
-      newErrors.occupation = "Occupation is required";
+    if (!formData.qualification.trim()) {
+      newErrors.qualification = "Qualification is required";
     }
 
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of birth is required";
+    if (!formData.dob) {
+      newErrors.dob = "Date of birth is required";
     }
 
-    if (!formData.aadharNo.trim()) {
-      newErrors.aadharNo = "Aadhar number is required";
-    } else if (!/^\d{12}$/.test(formData.aadharNo.replace(/\D/g, ''))) {
-      newErrors.aadharNo = "Please enter a valid 12-digit Aadhar number";
+    if (!formData.uniqueId.trim()) {
+      newErrors.uniqueId = "Aadhar number is required";
+    } else if (!/^\d{12}$/.test(formData.uniqueId.replace(/\D/g, ""))) {
+      newErrors.uniqueId = "Please enter a valid 12-digit Aadhar number";
     }
 
     if (!formData.address.trim()) {
       newErrors.address = "Address is required";
     }
 
-    if (!formData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-
-    if (!formData.designation) {
-      newErrors.designation = "Please select a designation";
+    if (!formData.memberDesignation) {
+      newErrors.memberDesignation = "Please select a designation";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check if form is completely empty
+
     if (checkIfFormEmpty()) {
       setShowAllFieldsError(true);
-      showToast("All fields are required! Please fill in all the required information.", 'error');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast("All required fields must be filled!", "error");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     setShowAllFieldsError(false);
-    
+
     if (!validateForm()) {
-      showToast("Please fix the errors in the form before submitting.", 'error');
+      showToast("Please fix the errors in the form before submitting.", "error");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log("Form Data:", formData);
-      showToast("Membership Registration submitted successfully!", 'success');
-      
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          name: "",
-          fatherName: "",
-          email: "",
-          mobile: "",
-          occupation: "",
-          dateOfBirth: "",
-          aadharNo: "",
-          address: "",
-          city: "",
-          designation: "",
-          profilePic: null,
-        });
-        setProfilePreview(null);
-        setErrors({});
-      }, 2000);
-     
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key !== "profilePic" && key !== "signature") {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+      if (formData.profilePic) {
+        console.log("Uploading profilePic:", formData.profilePic);
+        formDataToSend.append("photoPath", formData.profilePic);
+      } else {
+        showToast("Profile picture is required!", "error");
+        setIsLoading(false);
+        return;
+      }
+      if (formData.signature) {
+        console.log("Uploading signature:", formData.signature);
+        formDataToSend.append("signaturePath", formData.signature);
+      }
+
+      // Log FormData contents
+      console.log("FormData contents:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value instanceof File ? value.name : value);
+      }
+
+      const response = await fetch(`${baseURL}/auth/registerform`, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server response:", errorText);
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      showToast("Membership Registration submitted successfully!", "success", {
+        form: result.downloadForm,
+        idCard: result.downloadIDCard,
+      });
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        fatherName: "",
+        email: "",
+        mobileNo: "",
+        qualification: "",
+        dob: "",
+        uniqueId: "",
+        address: "",
+        memberDivision: "",
+        memberWorkLocation: "",
+        validTill: "",
+        bloodGroup: "",
+        memberDesignation: "",
+        profilePic: null,
+        signature: null,
+        formType: "membership",
+      });
+      setProfilePreview(null);
+      setSignaturePreview(null);
+      setErrors({});
     } catch (error) {
       console.error("Error submitting form:", error);
-      showToast("Failed to submit registration. Please try again.", 'error');
+      showToast(`Failed to submit registration: ${error.message}`, "error");
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      {/* Toast Notification */}
       {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
+          downloadLinks={toast.downloadLinks}
           onClose={closeToast}
         />
       )}
 
       <div className="bg-white shadow-xl p-8 w-full max-w-4xl">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Membership Registration</h1>
         </div>
 
+        {showAllFieldsError && (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+            All required fields must be filled!
+          </div>
+        )}
+
         <div className="space-y-6">
-          {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           
+            {/* Profile Picture */}
             <div className="md:col-span-2">
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Camera className="w-4 h-4 mr-2 text-blue-600" />
-                Profile Picture
+                Profile Picture <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 overflow-hidden bg-gray-100 border-2 border-gray-300 flex-shrink-0">
                   {profilePreview ? (
-                    <img
-                      src={profilePreview}
-                      alt="Profile Preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Camera className="w-8 h-8 text-gray-400" />
@@ -314,9 +382,10 @@ const MembershipRegistrationForm = () => {
                   )}
                 </div>
                 <div className="flex-1">
-                  <label className={`flex items-center justify-center px-4 py-3 border-2 border-dashed  cursor-pointer hover:bg-gray-50 transition-colors ${
-                    errors.profilePic ? "border-red-500" : "border-gray-300"
-                  }`}>
+                  <label
+                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${errors.profilePic ? "border-red-500" : "border-gray-300"
+                      }`}
+                  >
                     <Upload className="w-5 h-5 mr-2 text-gray-400" />
                     <span className="text-sm text-gray-600">
                       {formData.profilePic ? formData.profilePic.name : "Choose image file"}
@@ -324,38 +393,71 @@ const MembershipRegistrationForm = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, "profilePic")}
                       className="hidden"
                     />
                   </label>
                   <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
                 </div>
               </div>
-              {errors.profilePic && (
-                <p className="text-red-500 text-sm mt-1">{errors.profilePic}</p>
-              )}
+              {errors.profilePic && <p className="text-red-500 text-sm mt-1">{errors.profilePic}</p>}
             </div>
 
-            {/* Name */}
+            {/* Signature */}
+            <div className="md:col-span-2">
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Camera className="w-4 h-4 mr-2 text-blue-600" />
+                Signature
+              </label>
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 overflow-hidden bg-gray-100 border-2 border-gray-300 flex-shrink-0">
+                  {signaturePreview ? (
+                    <img src={signaturePreview} alt="Signature Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label
+                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${errors.signature ? "border-red-500" : "border-gray-300"
+                      }`}
+                  >
+                    <Upload className="w-5 h-5 mr-2 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      {formData.signature ? formData.signature.name : "Choose image file"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, "signature")}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                </div>
+              </div>
+              {errors.signature && <p className="text-red-500 text-sm mt-1">{errors.signature}</p>}
+            </div>
+
+            {/* Full Name */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <User className="w-4 h-4 mr-2 text-blue-600" />
-                Name <span className="text-red-500 ml-1">*</span>
+                Full Name <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.name ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.fullName ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Enter your full name"
                 required
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
+              {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
             </div>
 
             {/* Father Name */}
@@ -369,15 +471,12 @@ const MembershipRegistrationForm = () => {
                 name="fatherName"
                 value={formData.fatherName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.fatherName ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.fatherName ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Enter father's name"
                 required
               />
-              {errors.fatherName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fatherName}</p>
-              )}
+              {errors.fatherName && <p className="text-red-500 text-sm mt-1">{errors.fatherName}</p>}
             </div>
 
             {/* Email */}
@@ -391,18 +490,15 @@ const MembershipRegistrationForm = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Enter your email address"
                 required
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
 
-            {/* Mobile */}
+            {/* Mobile Number */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Phone className="w-4 h-4 mr-2 text-blue-600" />
@@ -410,40 +506,34 @@ const MembershipRegistrationForm = () => {
               </label>
               <input
                 type="tel"
-                name="mobile"
-                value={formData.mobile}
+                name="mobileNo"
+                value={formData.mobileNo}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.mobile ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.mobileNo ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Enter 10-digit mobile number"
                 required
               />
-              {errors.mobile && (
-                <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
-              )}
+              {errors.mobileNo && <p className="text-red-500 text-sm mt-1">{errors.mobileNo}</p>}
             </div>
 
-            {/* Occupation */}
+            {/* Qualification */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
-                Occupation <span className="text-red-500 ml-1">*</span>
+                Qualification <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
-                name="occupation"
-                value={formData.occupation}
+                name="qualification"
+                value={formData.qualification}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.occupation ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="Enter your occupation"
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.qualification ? "border-red-500" : "border-gray-300"
+                  }`}
+                placeholder="Enter your qualification"
                 required
               />
-              {errors.occupation && (
-                <p className="text-red-500 text-sm mt-1">{errors.occupation}</p>
-              )}
+              {errors.qualification && <p className="text-red-500 text-sm mt-1">{errors.qualification}</p>}
             </div>
 
             {/* Date of Birth */}
@@ -454,17 +544,14 @@ const MembershipRegistrationForm = () => {
               </label>
               <input
                 type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
+                name="dob"
+                value={formData.dob}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.dateOfBirth ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.dob ? "border-red-500" : "border-gray-300"
+                  }`}
                 required
               />
-              {errors.dateOfBirth && (
-                <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
-              )}
+              {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
             </div>
 
             {/* Aadhar Number */}
@@ -475,45 +562,95 @@ const MembershipRegistrationForm = () => {
               </label>
               <input
                 type="text"
-                name="aadharNo"
-                value={formData.aadharNo}
+                name="uniqueId"
+                value={formData.uniqueId}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.aadharNo ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.uniqueId ? "border-red-500" : "border-gray-300"
+                  }`}
                 placeholder="Enter 12-digit Aadhar number"
                 maxLength="12"
                 required
               />
-              {errors.aadharNo && (
-                <p className="text-red-500 text-sm mt-1">{errors.aadharNo}</p>
-              )}
+              {errors.uniqueId && <p className="text-red-500 text-sm mt-1">{errors.uniqueId}</p>}
             </div>
 
-            {/* City */}
+            {/* Blood Group */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Droplet className="w-4 h-4 mr-2 text-blue-600" />
+                Blood Group
+              </label>
+              <select
+                name="bloodGroup"
+                value={formData.bloodGroup}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.bloodGroup ? "border-red-500" : "border-gray-300"
+                  }`}
+              >
+                {bloodGroupOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.bloodGroup && <p className="text-red-500 text-sm mt-1">{errors.bloodGroup}</p>}
+            </div>
+
+            {/* Member Division */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Building className="w-4 h-4 mr-2 text-blue-600" />
-                City <span className="text-red-500 ml-1">*</span>
+                Member Division
               </label>
               <input
                 type="text"
-                name="city"
-                value={formData.city}
+                name="memberDivision"
+                value={formData.memberDivision}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.city ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="Enter your city"
-                required
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberDivision ? "border-red-500" : "border-gray-300"
+                  }`}
+                placeholder="Enter member division"
               />
-              {errors.city && (
-                <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-              )}
+              {errors.memberDivision && <p className="text-red-500 text-sm mt-1">{errors.memberDivision}</p>}
+            </div>
+
+            {/* Member Work Location */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Building className="w-4 h-4 mr-2 text-blue-600" />
+                Member Work Location
+              </label>
+              <input
+                type="text"
+                name="memberWorkLocation"
+                value={formData.memberWorkLocation}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberWorkLocation ? "border-red-500" : "border-gray-300"
+                  }`}
+                placeholder="Enter work location"
+              />
+              {errors.memberWorkLocation && <p className="text-red-500 text-sm mt-1">{errors.memberWorkLocation}</p>}
+            </div>
+
+            {/* Valid Till */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+                Valid Till
+              </label>
+              <input
+                type="date"
+                name="validTill"
+                value={formData.validTill}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.validTill ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.validTill && <p className="text-red-500 text-sm mt-1">{errors.validTill}</p>}
             </div>
           </div>
 
-          {/* Address - Full Width */}
+          {/* Address */}
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <MapPin className="w-4 h-4 mr-2 text-blue-600" />
@@ -524,30 +661,26 @@ const MembershipRegistrationForm = () => {
               value={formData.address}
               onChange={handleInputChange}
               rows={4}
-              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
-                errors.address ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${errors.address ? "border-red-500" : "border-gray-300"
+                }`}
               placeholder="Enter your complete residential address"
               required
             />
-            {errors.address && (
-              <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-            )}
+            {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
           </div>
 
-          {/* Designation - Full Width */}
+          {/* Designation */}
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Users className="w-4 h-4 mr-2 text-blue-600" />
               Select Designation <span className="text-red-500 ml-1">*</span>
             </label>
             <select
-              name="designation"
-              value={formData.designation}
+              name="memberDesignation"
+              value={formData.memberDesignation}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                errors.designation ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberDesignation ? "border-red-500" : "border-gray-300"
+                }`}
               required
             >
               {designationOptions.map((option) => (
@@ -556,9 +689,7 @@ const MembershipRegistrationForm = () => {
                 </option>
               ))}
             </select>
-            {errors.designation && (
-              <p className="text-red-500 text-sm mt-1">{errors.designation}</p>
-            )}
+            {errors.memberDesignation && <p className="text-red-500 text-sm mt-1">{errors.memberDesignation}</p>}
           </div>
 
           {/* Action Buttons */}
@@ -567,11 +698,8 @@ const MembershipRegistrationForm = () => {
               type="submit"
               onClick={handleSubmit}
               disabled={isLoading}
-              className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${
-                isLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
-              } text-white`}
+              className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
+                } text-white`}
             >
               {isLoading ? (
                 <>

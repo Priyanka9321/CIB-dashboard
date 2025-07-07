@@ -1,136 +1,50 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const GenerateCertificate = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch data from API using Axios
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('http://localhost:5000/api/certificates');
+        const fetchedData = Array.isArray(response.data.data) ? response.data.data : response.data || [];
+        // Map API fields to component fields
+        const mappedData = fetchedData.map(item => ({
+          id: item.userId,
+          name: item.fullName || '',
+          email: item.userEmail || '',
+          mobile: item.userMobile || '',
+          regNo: item.regNo || '',
+          regDate: item.regDate || '',
+          verifyDate: item.verifyDate || '',
+          status: item.status || ''
+        }));
+        setData(mappedData);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch data');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSubmit = (member) => {
     navigate('/admin/memberdetails', { state: { member } });
-  }
-
-
-  // Sample data - matches your screenshot
-  const [data, setData] = useState([
-    {
-      id: 361,
-      regNo: 'MBR-10',
-      name: 'Chandu',
-      email: 'chandu.sannepogu@gmail.com',
-      mobile: '9133949509',
-      regDate: '11-10-2024',
-      verifyDate: '11-10-2024',
-      status: 'Active',
-      fatherName: 'Mr. Sannepogu',
-      designation: 'Engineer',
-      dateOfBirth: '01-01-1995',
-      aadharCardNo: '1234-5678-9012',
-      address: 'Hyderabad, Telangana',
-      city: 'Hyderabad',
-      occupation: 'Software Developer',
-      userType: 'User',
-      verifiedBy: 'Admin',
-      userProfile: ''
-    }
-    
-    // {
-    //   id: 362,
-    //   regNo: 'MBR-9',
-    //   name: 'Mohit kumar',
-    //   email: 'kumarmohit63399@gmail.com',
-    //   mobile: '9341125223',
-    //   regDate: '11-10-2024',
-    //   verifyDate: '11-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 363,
-    //   regNo: 'MBR-7',
-    //   name: 'test',
-    //   email: 'test1@gmail.com',
-    //   mobile: '1111111111',
-    //   regDate: '10-10-2024',
-    //   verifyDate: '10-10-2024',
-    //   status: 'Active'
-    // },
-    // // Additional sample data to demonstrate pagination
-    // {
-    //   id: 364,
-    //   regNo: 'MBR-6',
-    //   name: 'John Doe',
-    //   email: 'john.doe@gmail.com',
-    //   mobile: '9876543210',
-    //   regDate: '09-10-2024',
-    //   verifyDate: '09-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 365,
-    //   regNo: 'MBR-5',
-    //   name: 'Jane Smith',
-    //   email: 'jane.smith@gmail.com',
-    //   mobile: '8765432109',
-    //   regDate: '08-10-2024',
-    //   verifyDate: '08-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 366,
-    //   regNo: 'MBR-4',
-    //   name: 'Bob Johnson',
-    //   email: 'bob.johnson@gmail.com',
-    //   mobile: '7654321098',
-    //   regDate: '07-10-2024',
-    //   verifyDate: '07-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 367,
-    //   regNo: 'MBR-3',
-    //   name: 'Alice Brown',
-    //   email: 'alice.brown@gmail.com',
-    //   mobile: '6543210987',
-    //   regDate: '06-10-2024',
-    //   verifyDate: '06-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 368,
-    //   regNo: 'MBR-2',
-    //   name: 'Charlie Davis',
-    //   email: 'charlie.davis@gmail.com',
-    //   mobile: '5432109876',
-    //   regDate: '05-10-2024',
-    //   verifyDate: '05-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 369,
-    //   regNo: 'MBR-1',
-    //   name: 'Diana Wilson',
-    //   email: 'diana.wilson@gmail.com',
-    //   mobile: '4321098765',
-    //   regDate: '04-10-2024',
-    //   verifyDate: '04-10-2024',
-    //   status: 'Active'
-    // },
-    // {
-    //   id: 370,
-    //   regNo: 'MBR-0',
-    //   name: 'Edward Miller',
-    //   email: 'edward.miller@gmail.com',
-    //   mobile: '3210987654',
-    //   regDate: '03-10-2024',
-    //   verifyDate: '03-10-2024',
-    //   status: 'Active'
-    // }
-  ]);
-
-
+  };
 
   // Filter data based on search
   const filteredData = useMemo(() => {
@@ -231,6 +145,27 @@ const GenerateCertificate = () => {
     return pages;
   };
 
+  // Render loading or error states
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+          <p className="text-red-600">Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-sm">
@@ -264,7 +199,7 @@ const GenerateCertificate = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="border border-gray-300 rounded px-3 py-2 text-sm w-64"
-              placeholder=""
+              placeholder="Search..."
             />
           </div>
         </div>
@@ -380,8 +315,9 @@ const GenerateCertificate = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
-                       onClick={() => handleSubmit(item)}
-                      className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                      onClick={() => handleSubmit(item)}
+                      className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
+                    >
                       View
                     </button>
                   </td>

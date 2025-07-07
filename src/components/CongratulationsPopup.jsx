@@ -8,7 +8,7 @@ export default function CongratulationsPopup() {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 fixed inset-0">
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4 fixed inset-0">
         <div className="relative z-50 bg-white shadow-xl p-6 w-full max-w-md mx-4 transform transition-all duration-300">
           {/* Close Button */}
           <button
