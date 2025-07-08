@@ -247,7 +247,6 @@ const ActiveMembers = () => {
     try {
       switch (action) {
         case "View":
-          await axios.patch(`${API_BASE}/${id}/viewed`);
           const mapped = {
             name: member.fullName,
             email: member.userEmail,
@@ -268,6 +267,7 @@ const ActiveMembers = () => {
           };
           navigate("/admin/member-details", { state: { member: mapped } });
           break;
+
         case "Appt. Letter":
           navigate("/admin/appointment-letter", {
             state: {
@@ -347,8 +347,9 @@ const ActiveMembers = () => {
           break;
 
         case "Edit":
-          await axios.patch(`${API_BASE}/${id}/viewed`);
+          
           const editMapped = {
+            userId: member.userId,
             name: member.fullName,
             email: member.userEmail,
             mobile: member.userMobile,
@@ -378,15 +379,20 @@ const ActiveMembers = () => {
           if (!confirmDelete) return;
 
           await axios.patch(`${API_BASE}/${id}/delete`);
+          console.log("Delete successful");
 
-          // Remove the deleted user from UI immediately
-          setData((prev) => prev.filter((user) => user.userId !== id));
+          // Option 1: Remove from UI directly
+          // setData((prev) => prev.filter((user) => user.userId !== id));
+
+          // Option 2: Better UX — re-fetch from DB to get accurate count
+          await fetchMembers();
+
           return;
 
         default:
           return;
       }
-      fetchMembers();
+      
     } catch (err) {
       console.error(`${action} failed:`, err.message);
     }
