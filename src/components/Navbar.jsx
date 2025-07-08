@@ -50,21 +50,24 @@ const Navbar = () => {
     }
   };
 
+  // If user is not available, provide fallback values
+  const displayName = user?.name || "User";
+  const displayEmail = user?.email || "No email";
+
   return (
     <header className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 shadow-lg">
       <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 py-2 sm:py-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
-            <div className="w-12 h-12 sm:w-8 sm:h-8  flex items-center justify-center text-white flex-shrink-0 ">
+            <div className="w-12 h-12 sm:w-8 sm:h-8 flex items-center justify-center text-white flex-shrink-0">
               {React.cloneElement(pageIcon, {
                 size:
                   window.innerWidth < 640
                     ? 18
                     : window.innerWidth < 1024
-                      ? 22
-                      : 26,
+                    ? 22
+                    : 26,
               })}
-
             </div>
             <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-semibold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent truncate">
               <span className="hidden sm:inline">{pageTitle}</span>
@@ -86,11 +89,12 @@ const Navbar = () => {
               <User className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-white" />
             </div>
             <span className="hidden xs:inline font-medium text-white text-sm sm:text-base max-w-24 sm:max-w-none truncate">
-              {user.name}
+              {displayName}
             </span>
             <ChevronDown
-              className={`w-3 h-3 sm:w-4 sm:h-4 text-blue-100 transition-transform ${profileDropdownOpen ? "rotate-180" : ""
-                }`}
+              className={`w-3 h-3 sm:w-4 sm:h-4 text-blue-100 transition-transform ${
+                profileDropdownOpen ? "rotate-180" : ""
+              }`}
             />
           </button>
 
@@ -103,10 +107,10 @@ const Navbar = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-800 text-sm sm:text-base truncate">
-                      {user.name}
+                      {displayName}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {user.email || "No email"}
+                      {displayEmail}
                     </p>
                   </div>
                 </div>
@@ -136,7 +140,7 @@ const Navbar = () => {
                 </button>
 
                 <button
-                  className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:bg-red-50 transition-colors  mx-2"
+                  className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:bg-red-50 transition-colors mx-2"
                   onClick={handleLogout}
                 >
                   <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

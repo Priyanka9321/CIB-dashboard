@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 const SignInForm = () => {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, login } = useAuth(); // Use 'login' instead of 'setUser'
   const popupContext = usePopup();
   const { setIsPopupOpen } = popupContext || {};
 
@@ -23,7 +23,7 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    console.log("AuthContext user after login:", user); 
+    console.log("AuthContext user after login:", user);
   }, [user]);
 
   const handleChange = (e) => {
@@ -71,7 +71,7 @@ const SignInForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (!validateForm()) return;
@@ -83,55 +83,24 @@ const SignInForm = () => {
       userEmail: formData.emailOrMobile,
       userPassword: formData.password,
     });
+    console.log("SignInForm - API response:", response.data);
+    console.log("SignInForm - Token:", response.data.token);
 
     if (response.status === 200) {
       const { token, user: userData } = response.data;
-      const userInfo = {
-        name: userData.name,
-        email: userData.email,
-        role: userData.role.toLowerCase(),
-      };
-
-      // Clear existing tokens
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
-
-      // Set new token
-      if (token) {
-        if (formData.keepLoggedIn) {
-          localStorage.setItem("token", token);
-        } else {
-          sessionStorage.setItem("token", token);
-        }
-      }
-
-      setUser(userInfo);
-
-     
-      if (setIsPopupOpen) {
-        setIsPopupOpen(true);
-      }
-
+      login(token, formData.keepLoggedIn);
       toast.success("Login successful!");
-      navigate(userInfo.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      navigate(userData.role.toLowerCase() === "admin" ? "/admin/dashboard" : "/user/dashboard");
     }
   } catch (err) {
     console.error("Login error:", err.response?.data || err);
-
-    const errorMessage =
-      err.response?.data?.message || "Login failed. Please try again.";
-
-    setErrors({
-      ...errors,
-      general: errorMessage,
-    });
-
+    const errorMessage = err.response?.data?.message || "Login failed. Please try again.";
+    setErrors({ ...errors, general: errorMessage });
     toast.error(errorMessage);
   } finally {
     setIsLoading(false);
   }
 };
-
 
   const isAdminEmail = formData.emailOrMobile === "admin@cib.com";
 
@@ -207,7 +176,6 @@ const SignInForm = () => {
                 disabled={isLoading}
               >
                 {showPassword ? (
-                  
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -223,7 +191,6 @@ const SignInForm = () => {
                     />
                   </svg>
                 ) : (
-                 
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -253,7 +220,6 @@ const SignInForm = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            
             {!isAdminEmail && (
               <Link
                 to="/forgot-password"
