@@ -4,7 +4,7 @@ import { MemberContext } from '../../context/MemberContext';
 import MembershipRegistrationForm from '../user/MembershipRegistrationForm'; 
 
 const NewMembership = () => {
-  const baseURL = import.meta.env.VITE_BASE_URL;
+ 
   const { data, error, fetchMembers, searchMembers, viewDetails, verifyMember, deleteMember, updateMember } =
     useContext(MemberContext);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,8 +41,8 @@ const NewMembership = () => {
         email: member.userEmail,
         mobileNo: member.userMobile,
         uniqueId: member.uniqueId || '',
-        profilePic: member.photoPath ? { path: `${baseURL}/${member.photoPath}` } : null,
-        signature: member.signaturePath ? { path: `${baseURL}/${member.signaturePath}` } : null,
+        profilePic: member.photoPath ? { path: `http://localhost:5000/${member.photoPath}` } : null,
+        signature: member.signaturePath ? { path: `http://localhost:5000/${member.signaturePath}` } : null,
       });
       setViewMode(true);
       setShowForm(true);
@@ -57,8 +57,8 @@ const NewMembership = () => {
         email: member.userEmail,
         mobileNo: member.userMobile,
         uniqueId: member.uniqueId || '',
-        profilePic: member.photoPath ? { path: `${baseURL}/${member.photoPath}` } : null,
-        signature: member.signaturePath ? { path: `${baseURL}/${member.signaturePath}` } : null,
+        profilePic: member.photoPath ? { path: `http://localhost:5000/${member.photoPath}` } : null,
+        signature: member.signaturePath ? { path: `http://localhost:5000/${member.signaturePath}` } : null,
       });
       setViewMode(false);
       setShowForm(true);
