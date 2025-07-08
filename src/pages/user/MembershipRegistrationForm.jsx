@@ -18,6 +18,7 @@ import {
   Droplet,
 } from "lucide-react";
 
+// Toast component remains unchanged
 const Toast = ({ message, type, onClose, downloadLinks }) => {
   const bgColor = type === "success" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800";
   const Icon = type === "success" ? CheckCircle : AlertCircle;
@@ -66,7 +67,7 @@ const MembershipRegistrationForm = () => {
     memberDesignation: "",
     profilePic: null,
     signature: null,
-    formType: "membership", // Default value, adjust as needed
+    formType: "membership",
   });
 
   const [profilePreview, setProfilePreview] = useState(null);
@@ -104,7 +105,7 @@ const MembershipRegistrationForm = () => {
     setToast({ message, type, downloadLinks });
     setTimeout(() => {
       setToast(null);
-    }, 10000); // Increased timeout to allow downloading PDFs
+    }, 10000);
   };
 
   const closeToast = () => {
@@ -133,9 +134,9 @@ const MembershipRegistrationForm = () => {
   const handleFileChange = (e, field) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        const errorMsg = "File size should be less than 5MB";
+      // Validate file size (max 2MB to match backend)
+      if (file.size > 2 * 1024 * 1024) {
+        const errorMsg = "File size should be less than 2MB";
         setErrors((prev) => ({
           ...prev,
           [field]: errorMsg,
@@ -145,8 +146,8 @@ const MembershipRegistrationForm = () => {
       }
 
       // Validate file type
-      if (!file.type.startsWith("image/")) {
-        const errorMsg = "Please select a valid image file";
+      if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
+        const errorMsg = "Please select a JPEG, PNG, or GIF image file";
         setErrors((prev) => ({
           ...prev,
           [field]: errorMsg,
@@ -249,101 +250,105 @@ const MembershipRegistrationForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (checkIfFormEmpty()) {
-    setShowAllFieldsError(true);
-    showToast("All required fields must be filled!", "error");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    return;
-  }
-
-  setShowAllFieldsError(false);
-
-  if (!validateForm()) {
-    showToast("Please fix the errors in the form before submitting.", "error");
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    const formDataToSend = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (key !== "profilePic" && key !== "signature") {
-        formDataToSend.append(key, formData[key]);
-      }
-    });
-    if (formData.profilePic) {
-      console.log("Uploading profilePic:", formData.profilePic);
-      formDataToSend.append("photoPath", formData.profilePic);
-    } else {
-      showToast("Profile picture is required!", "error");
-      setIsLoading(false);
+    if (checkIfFormEmpty()) {
+      setShowAllFieldsError(true);
+      showToast("All required fields must be filled!", "error");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    if (formData.signature) {
-      console.log("Uploading signature:", formData.signature);
-      formDataToSend.append("signaturePath", formData.signature);
+
+    setShowAllFieldsError(false);
+
+    if (!validateForm()) {
+      showToast("Please fix the errors in the form before submitting.", "error");
+      return;
     }
 
-    // Log FormData contents
-    console.log("FormData contents:");
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(`${key}:`, value instanceof File ? value.name : value);
-    }
+    setIsLoading(true);
 
-    const response = await fetch(`${baseURL}/auth/registerform`, {
-      method: "POST",
-      body: formDataToSend,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Server response:", errorData);
-      if (errorData.message === "Aadhar number already exists" || errorData.message === "Aadhar number already exists in member forms" || errorData.message === "Aadhar number already exists in ID cards") {
-        throw new Error("The provided Aadhar number is already registered.");
+    try {
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key !== "profilePic" && key !== "signature") {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+      if (formData.profilePic) {
+        console.log("Uploading profilePic:", formData.profilePic);
+        formDataToSend.append("photoPath", formData.profilePic);
+      } else {
+        showToast("Profile picture is required!", "error");
+        setIsLoading(false);
+        return;
       }
-      throw new Error(`Server returned ${response.status}: ${errorData.message}`);
+      if (formData.signature) {
+        console.log("Uploading signature:", formData.signature);
+        formDataToSend.append("signaturePath", formData.signature);
+      }
+
+      // Log FormData contents
+      console.log("FormData contents:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value instanceof File ? value.name : value);
+      }
+
+      const response = await fetch(`${baseURL}/auth/registerform`, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server response:", errorData);
+        if (
+          errorData.message === "Aadhar number already exists" ||
+          errorData.message === "Aadhar number already exists in member forms" ||
+          errorData.message === "Aadhar number already exists in ID cards"
+        ) {
+          throw new Error("The provided Aadhar number is already registered.");
+        }
+        throw new Error(`Server returned ${response.status}: ${errorData.message}`);
+      }
+
+      const result = await response.json();
+      showToast("Membership Registration submitted successfully!", "success", {
+        form: result.downloadForm,
+        idCard: result.downloadIDCard,
+      });
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        fatherName: "",
+        email: "",
+        mobileNo: "",
+        qualification: "",
+        dob: "",
+        uniqueId: "",
+        address: "",
+        memberDivision: "",
+        memberWorkLocation: "",
+        validTill: "",
+        bloodGroup: "",
+        memberDesignation: "",
+        profilePic: null,
+        signature: null,
+        formType: "membership",
+      });
+      setProfilePreview(null);
+      setSignaturePreview(null);
+      setErrors({});
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      showToast(error.message, "error");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const result = await response.json();
-    showToast("Membership Registration submitted successfully!", "success", {
-      form: result.downloadForm,
-      idCard: result.downloadIDCard,
-    });
-
-    // Reset form
-    setFormData({
-      fullName: "",
-      fatherName: "",
-      email: "",
-      mobileNo: "",
-      qualification: "",
-      dob: "",
-      uniqueId: "",
-      address: "",
-      memberDivision: "",
-      memberWorkLocation: "",
-      validTill: "",
-      bloodGroup: "",
-      memberDesignation: "",
-      profilePic: null,
-      signature: null,
-      formType: "membership",
-    });
-    setProfilePreview(null);
-    setSignaturePreview(null);
-    setErrors({});
-  } catch (error) {
-    console.error("Error submitting form:", error);
-    showToast(error.message, "error");
-  } finally {
-    setIsLoading(false);
-  }
-};
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       {toast && (
@@ -386,8 +391,9 @@ const MembershipRegistrationForm = () => {
                 </div>
                 <div className="flex-1">
                   <label
-                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${errors.profilePic ? "border-red-500" : "border-gray-300"
-                      }`}
+                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
+                      errors.profilePic ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
                     <Upload className="w-5 h-5 mr-2 text-gray-400" />
                     <span className="text-sm text-gray-600">
@@ -400,7 +406,7 @@ const MembershipRegistrationForm = () => {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                  <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
                 </div>
               </div>
               {errors.profilePic && <p className="text-red-500 text-sm mt-1">{errors.profilePic}</p>}
@@ -424,8 +430,9 @@ const MembershipRegistrationForm = () => {
                 </div>
                 <div className="flex-1">
                   <label
-                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${errors.signature ? "border-red-500" : "border-gray-300"
-                      }`}
+                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
+                      errors.signature ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
                     <Upload className="w-5 h-5 mr-2 text-gray-400" />
                     <span className="text-sm text-gray-600">
@@ -438,12 +445,13 @@ const MembershipRegistrationForm = () => {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                  <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
                 </div>
               </div>
               {errors.signature && <p className="text-red-500 text-sm mt-1">{errors.signature}</p>}
             </div>
 
+            {/* The rest of the form remains unchanged */}
             {/* Full Name */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -455,8 +463,9 @@ const MembershipRegistrationForm = () => {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.fullName ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.fullName ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter your full name"
                 required
               />
@@ -474,8 +483,9 @@ const MembershipRegistrationForm = () => {
                 name="fatherName"
                 value={formData.fatherName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.fatherName ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.fatherName ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter father's name"
                 required
               />
@@ -484,7 +494,7 @@ const MembershipRegistrationForm = () => {
 
             {/* Email */}
             <div>
-              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center text083333-sm font-medium text-gray-700 mb-2">
                 <Mail className="w-4 h-4 mr-2 text-blue-600" />
                 Email <span className="text-red-500 ml-1">*</span>
               </label>
@@ -493,8 +503,9 @@ const MembershipRegistrationForm = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter your email address"
                 required
               />
@@ -512,8 +523,9 @@ const MembershipRegistrationForm = () => {
                 name="mobileNo"
                 value={formData.mobileNo}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.mobileNo ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.mobileNo ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter 10-digit mobile number"
                 required
               />
@@ -531,8 +543,9 @@ const MembershipRegistrationForm = () => {
                 name="qualification"
                 value={formData.qualification}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.qualification ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.qualification ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter your qualification"
                 required
               />
@@ -550,8 +563,9 @@ const MembershipRegistrationForm = () => {
                 name="dob"
                 value={formData.dob}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.dob ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.dob ? "border-red-500" : "border-gray-300"
+                }`}
                 required
               />
               {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
@@ -568,8 +582,9 @@ const MembershipRegistrationForm = () => {
                 name="uniqueId"
                 value={formData.uniqueId}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.uniqueId ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.uniqueId ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter 12-digit Aadhar number"
                 maxLength="12"
                 required
@@ -587,8 +602,9 @@ const MembershipRegistrationForm = () => {
                 name="bloodGroup"
                 value={formData.bloodGroup}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.bloodGroup ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.bloodGroup ? "border-red-500" : "border-gray-300"
+                }`}
               >
                 {bloodGroupOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -610,8 +626,9 @@ const MembershipRegistrationForm = () => {
                 name="memberDivision"
                 value={formData.memberDivision}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberDivision ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.memberDivision ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter member division"
               />
               {errors.memberDivision && <p className="text-red-500 text-sm mt-1">{errors.memberDivision}</p>}
@@ -628,8 +645,9 @@ const MembershipRegistrationForm = () => {
                 name="memberWorkLocation"
                 value={formData.memberWorkLocation}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberWorkLocation ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.memberWorkLocation ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter work location"
               />
               {errors.memberWorkLocation && <p className="text-red-500 text-sm mt-1">{errors.memberWorkLocation}</p>}
@@ -646,8 +664,9 @@ const MembershipRegistrationForm = () => {
                 name="validTill"
                 value={formData.validTill}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.validTill ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.validTill ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.validTill && <p className="text-red-500 text-sm mt-1">{errors.validTill}</p>}
             </div>
@@ -664,8 +683,9 @@ const MembershipRegistrationForm = () => {
               value={formData.address}
               onChange={handleInputChange}
               rows={4}
-              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${errors.address ? "border-red-500" : "border-gray-300"
-                }`}
+              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
+                errors.address ? "border-red-500" : "border-gray-300"
+              }`}
               placeholder="Enter your complete residential address"
               required
             />
@@ -682,8 +702,9 @@ const MembershipRegistrationForm = () => {
               name="memberDesignation"
               value={formData.memberDesignation}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.memberDesignation ? "border-red-500" : "border-gray-300"
-                }`}
+              className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                errors.memberDesignation ? "border-red-500" : "border-gray-300"
+              }`}
               required
             >
               {designationOptions.map((option) => (
@@ -701,18 +722,19 @@ const MembershipRegistrationForm = () => {
               type="submit"
               onClick={handleSubmit}
               disabled={isLoading}
-              className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
-                } text-white`}
+              className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${
+                isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
+              } text-white`}
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Submitting Registration...
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Submitting Registration...
                 </>
               ) : (
                 <>
-                  <Send className="w-5 h-5 mr-2" />
-                  Submit Registration
+                    <Send className="w-5 h-5 mr-2" />
+                    Submit Registration
                 </>
               )}
             </button>
