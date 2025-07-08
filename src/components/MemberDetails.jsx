@@ -100,10 +100,7 @@
 
 // export default MemberDetails;
 
-
-// updated by sumit 
-
-
+// updated by sumit
 
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -114,27 +111,67 @@ const MemberDetails = () => {
   const navigate = useNavigate();
   const { member, mode } = location.state || {};
   const isEdit = mode === "edit";
+  const userId = member?.userId;
 
   const [formData, setFormData] = useState({
-    name: member?.name || "",
-    fatherName: member?.fatherName || "",
-    email: member?.email || "",
-    mobile: member?.mobile || "",
-    designation: member?.designation || "",
-    dateOfBirth: member?.dateOfBirth || "",
-    aadharCardNo: member?.aadharCardNo || "",
-    address: member?.address || "",
-    city: member?.city || "",
-    occupation: member?.occupation || "",
-    userType: member?.userType || "",
-    accountStatus: member?.accountStatus || "",
-    verifiedBy: member?.verifiedBy || "",
+    name: "",
+    email: "",
+    mobile: "",
+    accountStatus: "",
+    role: "",
+    verifiedBy: "",
+
+    // member_forms
+    fatherName: "",
+    dob: "",
+    qualification: "",
+    address: "",
+    photoPath: "",
+    signaturePath: "",
+    memberDesignation: "",
+    memberDivision: "",
+    memberWorkLocation: "",
+    validTill: "",
+    bloodGroup: "",
   });
+
+  // ✅ Fetch full user+member_forms data
+  useEffect(() => {
+    if (!userId) return;
+
+    axios
+      .get(`http://localhost:5000/api/v1/members/${userId}/details`)
+      .then((res) => {
+        const data = res.data;
+
+        setFormData({
+          name: data.userFullName || "",
+          email: data.userEmail || "",
+          mobile: data.userMobile || "",
+          accountStatus: data.accountStatus || "",
+          role: data.role || "",
+          verifiedBy: data.verifiedBy || "",
+
+          fatherName: data.fatherName || "",
+          dob: data.dob || "",
+          qualification: data.qualification || "",
+          address: data.address || "",
+          photoPath: data.photoPath || "",
+          signaturePath: data.signaturePath || "",
+          memberDesignation: data.memberDesignation || "",
+          memberDivision: data.memberDivision || "",
+          memberWorkLocation: data.memberWorkLocation || "",
+          validTill: data.validTill || "",
+          bloodGroup: data.bloodGroup || "",
+        });
+      })
+      .catch((err) => console.error("Error fetching member details", err));
+  }, [userId]);
 
   const handleSave = async () => {
     try {
       await axios.patch(
-        `http://localhost:5000/api/v1/members/${member.userId}/edit`,
+        `http://localhost:5000/api/v1/members/${userId}/edit`,
         formData
       );
       alert("Member details updated successfully!");
@@ -152,7 +189,7 @@ const MemberDetails = () => {
       </h2>
 
       <div className="divide-y divide-gray-200">
-        {Object.keys(formData).map((key, index) => (
+        {Object.entries(formData).map(([key, value], index) => (
           <div
             key={index}
             className="grid grid-cols-3 border-b border-gray-200 hover:bg-blue-50 transition-colors"
@@ -165,15 +202,15 @@ const MemberDetails = () => {
                 <input
                   type="text"
                   name={key}
-                  value={formData[key]}
+                  value={formData[key] || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, [key]: e.target.value })
                   }
                   className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
                 />
               ) : (
-                <span className={formData[key] ? "text-gray-800" : "text-gray-400"}>
-                  {formData[key] || "N/A"}
+                <span className={value ? "text-gray-800" : "text-gray-400"}>
+                  {value || "N/A"}
                 </span>
               )}
             </div>
@@ -201,4 +238,3 @@ const MemberDetails = () => {
 };
 
 export default MemberDetails;
-

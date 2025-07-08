@@ -277,7 +277,7 @@ const AppointmentLetter = () => {
   return (
     <div className="max-w-3xl mx-auto bg-white my-10 p-6 shadow-md text-[15px] leading-relaxed font-[Georgia] relative">
       {/* Download / Print Button */}
-      <div className="absolute top-6 right-6 print:hidden">
+      <div className="absolute top-0 -right-40 print:hidden">
         <button
           onClick={() => window.print()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm cursor-pointer"
