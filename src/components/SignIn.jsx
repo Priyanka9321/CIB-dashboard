@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 const SignInForm = () => {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
-  const { user, login } = useAuth(); // Use 'login' instead of 'setUser'
+  const { user, login } = useAuth();
   const popupContext = usePopup();
   const { setIsPopupOpen } = popupContext || {};
 

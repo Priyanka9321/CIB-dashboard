@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Users,
@@ -16,12 +16,11 @@ import {
   CheckCircle,
   AlertCircle,
   Droplet,
-} from "lucide-react";
+} from 'lucide-react';
 
-// Toast component remains unchanged
 const Toast = ({ message, type, onClose, downloadLinks }) => {
-  const bgColor = type === "success" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800";
-  const Icon = type === "success" ? CheckCircle : AlertCircle;
+  const bgColor = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
+  const Icon = type === 'success' ? CheckCircle : AlertCircle;
 
   return (
     <div className={`fixed top-4 right-4 ${bgColor} border px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm`}>
@@ -49,27 +48,26 @@ const Toast = ({ message, type, onClose, downloadLinks }) => {
   );
 };
 
-const MembershipRegistrationForm = () => {
+const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit, onCancel }) => {
   const baseURL = import.meta.env.VITE_BASE_URL;
   const [formData, setFormData] = useState({
-    fullName: "",
-    fatherName: "",
-    email: "",
-    mobileNo: "",
-    qualification: "",
-    dob: "",
-    uniqueId: "",
-    address: "",
-    memberDivision: "",
-    memberWorkLocation: "",
-    validTill: "",
-    bloodGroup: "",
-    memberDesignation: "",
+    fullName: '',
+    fatherName: '',
+    email: '',
+    mobileNo: '',
+    qualification: '',
+    dob: '',
+    uniqueId: '',
+    address: '',
+    memberDivision: '',
+    memberWorkLocation: '',
+    validTill: '',
+    bloodGroup: '',
+    memberDesignation: '',
     profilePic: null,
     signature: null,
-    formType: "membership",
+    formType: 'membership',
   });
-
   const [profilePreview, setProfilePreview] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [errors, setErrors] = useState({});
@@ -77,28 +75,53 @@ const MembershipRegistrationForm = () => {
   const [showAllFieldsError, setShowAllFieldsError] = useState(false);
   const [toast, setToast] = useState(null);
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        fullName: initialData.fullName || '',
+        fatherName: initialData.fatherName || '',
+        email: initialData.email || '',
+        mobileNo: initialData.mobileNo || '',
+        qualification: initialData.qualification || '',
+        dob: initialData.dob || '',
+        uniqueId: initialData.uniqueId || '',
+        address: initialData.address || '',
+        memberDivision: initialData.memberDivision || '',
+        memberWorkLocation: initialData.memberWorkLocation || '',
+        validTill: initialData.validTill || '',
+        bloodGroup: initialData.bloodGroup || '',
+        memberDesignation: initialData.memberDesignation || '',
+        profilePic: initialData.profilePic || null,
+        signature: initialData.signature || null,
+        formType: 'membership',
+      });
+      setProfilePreview(initialData.profilePic?.path || null);
+      setSignaturePreview(initialData.signature?.path || null);
+    }
+  }, [initialData]);
+
   const designationOptions = [
-    { value: "", label: "Select Designation" },
-    { value: "director", label: "Director" },
-    { value: "secretary", label: "Secretary" },
-    { value: "president", label: "President" },
-    { value: "vice-president", label: "Vice President" },
-    { value: "treasurer", label: "Treasurer" },
-    { value: "member", label: "Member" },
-    { value: "volunteer", label: "Volunteer" },
-    { value: "social-worker", label: "Social Worker" },
+    { value: '', label: 'Select Designation' },
+    { value: 'director', label: 'Director' },
+    { value: 'secretary', label: 'Secretary' },
+    { value: 'president', label: 'President' },
+    { value: 'vice-president', label: 'Vice President' },
+    { value: 'treasurer', label: 'Treasurer' },
+    { value: 'member', label: 'Member' },
+    { value: 'volunteer', label: 'Volunteer' },
+    { value: 'social-worker', label: 'Social Worker' },
   ];
 
   const bloodGroupOptions = [
-    { value: "", label: "Select Blood Group" },
-    { value: "A+", label: "A+" },
-    { value: "A-", label: "A-" },
-    { value: "B+", label: "B+" },
-    { value: "B-", label: "B-" },
-    { value: "AB+", label: "AB+" },
-    { value: "AB-", label: "AB-" },
-    { value: "O+", label: "O+" },
-    { value: "O-", label: "O-" },
+    { value: '', label: 'Select Blood Group' },
+    { value: 'A+', label: 'A+' },
+    { value: 'A-', label: 'A-' },
+    { value: 'B+', label: 'B+' },
+    { value: 'B-', label: 'B-' },
+    { value: 'AB+', label: 'AB+' },
+    { value: 'AB-', label: 'AB-' },
+    { value: 'O+', label: 'O+' },
+    { value: 'O-', label: 'O-' },
   ];
 
   const showToast = (message, type, downloadLinks = null) => {
@@ -122,7 +145,7 @@ const MembershipRegistrationForm = () => {
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: "",
+        [name]: '',
       }));
     }
 
@@ -132,27 +155,26 @@ const MembershipRegistrationForm = () => {
   };
 
   const handleFileChange = (e, field) => {
+    if (isViewMode) return;
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 2MB to match backend)
       if (file.size > 2 * 1024 * 1024) {
-        const errorMsg = "File size should be less than 2MB";
+        const errorMsg = 'File size should be less than 2MB';
         setErrors((prev) => ({
           ...prev,
           [field]: errorMsg,
         }));
-        showToast(errorMsg, "error");
+        showToast(errorMsg, 'error');
         return;
       }
 
-      // Validate file type
-      if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
-        const errorMsg = "Please select a JPEG, PNG, or GIF image file";
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        const errorMsg = 'Please select a JPEG, PNG, or GIF image file';
         setErrors((prev) => ({
           ...prev,
           [field]: errorMsg,
         }));
-        showToast(errorMsg, "error");
+        showToast(errorMsg, 'error');
         return;
       }
 
@@ -163,9 +185,9 @@ const MembershipRegistrationForm = () => {
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (field === "profilePic") {
+        if (field === 'profilePic') {
           setProfilePreview(reader.result);
-        } else if (field === "signature") {
+        } else if (field === 'signature') {
           setSignaturePreview(reader.result);
         }
       };
@@ -174,29 +196,25 @@ const MembershipRegistrationForm = () => {
       if (errors[field]) {
         setErrors((prev) => ({
           ...prev,
-          [field]: "",
+          [field]: '',
         }));
       }
 
-      if (showAllFieldsError) {
-        setShowAllFieldsError(false);
-      }
-
-      showToast(`${field === "profilePic" ? "Profile picture" : "Signature"} uploaded successfully!`, "success");
+      showToast(`${field === 'profilePic' ? 'Profile picture' : 'Signature'} uploaded successfully!`, 'success');
     }
   };
 
   const checkIfFormEmpty = () => {
     const requiredFields = [
-      "fullName",
-      "fatherName",
-      "email",
-      "mobileNo",
-      "qualification",
-      "dob",
-      "uniqueId",
-      "address",
-      "memberDesignation",
+      'fullName',
+      'fatherName',
+      'email',
+      'mobileNo',
+      'qualification',
+      'dob',
+      'uniqueId',
+      'address',
+      'memberDesignation',
     ];
     return requiredFields.every((field) => !formData[field]?.toString().trim());
   };
@@ -205,7 +223,7 @@ const MembershipRegistrationForm = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "Name is required";
+      newErrors.fullName = 'Name is required';
     }
 
     if (!formData.fatherName.trim()) {
@@ -213,37 +231,37 @@ const MembershipRegistrationForm = () => {
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = 'Please enter a valid email address';
     }
 
     if (!formData.mobileNo.trim()) {
-      newErrors.mobileNo = "Mobile number is required";
-    } else if (!/^\d{10}$/.test(formData.mobileNo.replace(/\D/g, ""))) {
-      newErrors.mobileNo = "Please enter a valid 10-digit mobile number";
+      newErrors.mobileNo = 'Mobile number is required';
+    } else if (!/^\d{10}$/.test(formData.mobileNo.replace(/\D/g, ''))) {
+      newErrors.mobileNo = 'Please enter a valid 10-digit mobile number';
     }
 
     if (!formData.qualification.trim()) {
-      newErrors.qualification = "Qualification is required";
+      newErrors.qualification = 'Qualification is required';
     }
 
     if (!formData.dob) {
-      newErrors.dob = "Date of birth is required";
+      newErrors.dob = 'Date of birth is required';
     }
 
     if (!formData.uniqueId.trim()) {
-      newErrors.uniqueId = "Aadhar number is required";
-    } else if (!/^\d{12}$/.test(formData.uniqueId.replace(/\D/g, ""))) {
-      newErrors.uniqueId = "Please enter a valid 12-digit Aadhar number";
+      newErrors.uniqueId = 'Aadhar number is required';
+    } else if (!/^\d{12}$/.test(formData.uniqueId.replace(/\D/g, ''))) {
+      newErrors.uniqueId = 'Please enter a valid 12-digit Aadhar number';
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
+      newErrors.address = 'Address is required';
     }
 
     if (!formData.memberDesignation) {
-      newErrors.memberDesignation = "Please select a designation";
+      newErrors.memberDesignation = 'Please select a designation';
     }
 
     setErrors(newErrors);
@@ -252,98 +270,31 @@ const MembershipRegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isViewMode) {
+      onSubmit(formData);
+      return;
+    }
 
     if (checkIfFormEmpty()) {
       setShowAllFieldsError(true);
-      showToast("All required fields must be filled!", "error");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast('All required fields must be filled!', 'error');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     setShowAllFieldsError(false);
 
     if (!validateForm()) {
-      showToast("Please fix the errors in the form before submitting.", "error");
+      showToast('Please fix the errors in the form before submitting.', 'error');
       return;
     }
 
     setIsLoading(true);
-
     try {
-      const formDataToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key !== "profilePic" && key !== "signature") {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-      if (formData.profilePic) {
-        console.log("Uploading profilePic:", formData.profilePic);
-        formDataToSend.append("photoPath", formData.profilePic);
-      } else {
-        showToast("Profile picture is required!", "error");
-        setIsLoading(false);
-        return;
-      }
-      if (formData.signature) {
-        console.log("Uploading signature:", formData.signature);
-        formDataToSend.append("signaturePath", formData.signature);
-      }
-
-      // Log FormData contents
-      console.log("FormData contents:");
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value instanceof File ? value.name : value);
-      }
-
-      const response = await fetch(`${baseURL}/auth/registerform`, {
-        method: "POST",
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server response:", errorData);
-        if (
-          errorData.message === "Aadhar number already exists" ||
-          errorData.message === "Aadhar number already exists in member forms" ||
-          errorData.message === "Aadhar number already exists in ID cards"
-        ) {
-          throw new Error("The provided Aadhar number is already registered.");
-        }
-        throw new Error(`Server returned ${response.status}: ${errorData.message}`);
-      }
-
-      const result = await response.json();
-      showToast("Membership Registration submitted successfully!", "success", {
-        form: result.downloadForm,
-        idCard: result.downloadIDCard,
-      });
-
-      // Reset form
-      setFormData({
-        fullName: "",
-        fatherName: "",
-        email: "",
-        mobileNo: "",
-        qualification: "",
-        dob: "",
-        uniqueId: "",
-        address: "",
-        memberDivision: "",
-        memberWorkLocation: "",
-        validTill: "",
-        bloodGroup: "",
-        memberDesignation: "",
-        profilePic: null,
-        signature: null,
-        formType: "membership",
-      });
-      setProfilePreview(null);
-      setSignaturePreview(null);
-      setErrors({});
+      await onSubmit(formData);
+      showToast('Member details updated successfully!', 'success');
     } catch (error) {
-      console.error("Error submitting form:", error);
-      showToast(error.message, "error");
+      showToast(error.message || 'Failed to update member.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -362,7 +313,9 @@ const MembershipRegistrationForm = () => {
 
       <div className="bg-white shadow-xl p-8 w-full max-w-4xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Membership Registration</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            {isViewMode ? 'View Member Details' : 'Edit Member Details'}
+          </h1>
         </div>
 
         {showAllFieldsError && (
@@ -371,7 +324,7 @@ const MembershipRegistrationForm = () => {
           </div>
         )}
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Profile Picture */}
             <div className="md:col-span-2">
@@ -389,25 +342,32 @@ const MembershipRegistrationForm = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <label
-                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
-                      errors.profilePic ? "border-red-500" : "border-gray-300"
-                    }`}
-                  >
-                    <Upload className="w-5 h-5 mr-2 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      {formData.profilePic ? formData.profilePic.name : "Choose image file"}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, "profilePic")}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
-                </div>
+                {!isViewMode && (
+                  <div className="flex-1">
+                    <label
+                      className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
+                        errors.profilePic ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <Upload className="w-5 h-5 mr-2 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        {formData.profilePic?.path
+                          ? formData.profilePic.path.split('/').pop()
+                          : formData.profilePic
+                          ? formData.profilePic.name
+                          : 'Choose image file'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'profilePic')}
+                        className="hidden"
+                        disabled={isViewMode}
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
+                  </div>
+                )}
               </div>
               {errors.profilePic && <p className="text-red-500 text-sm mt-1">{errors.profilePic}</p>}
             </div>
@@ -428,30 +388,36 @@ const MembershipRegistrationForm = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <label
-                    className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
-                      errors.signature ? "border-red-500" : "border-gray-300"
-                    }`}
-                  >
-                    <Upload className="w-5 h-5 mr-2 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      {formData.signature ? formData.signature.name : "Choose image file"}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, "signature")}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
-                </div>
+                {!isViewMode && (
+                  <div className="flex-1">
+                    <label
+                      className={`flex items-center justify-center px-4 py-3 border-2 border-dashed cursor-pointer hover:bg-gray-50 transition-colors ${
+                        errors.signature ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <Upload className="w-5 h-5 mr-2 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        {formData.signature?.path
+                          ? formData.signature.path.split('/').pop()
+                          : formData.signature
+                          ? formData.signature.name
+                          : 'Choose image file'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'signature')}
+                        className="hidden"
+                        disabled={isViewMode}
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF up to 2MB</p>
+                  </div>
+                )}
               </div>
               {errors.signature && <p className="text-red-500 text-sm mt-1">{errors.signature}</p>}
             </div>
 
-            {/* The rest of the form remains unchanged */}
             {/* Full Name */}
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -464,9 +430,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.fullName}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.fullName ? "border-red-500" : "border-gray-300"
+                  errors.fullName ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter your full name"
+                disabled={isViewMode}
                 required
               />
               {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
@@ -484,9 +451,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.fatherName}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.fatherName ? "border-red-500" : "border-gray-300"
+                  errors.fatherName ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter father's name"
+                disabled={isViewMode}
                 required
               />
               {errors.fatherName && <p className="text-red-500 text-sm mt-1">{errors.fatherName}</p>}
@@ -494,7 +462,7 @@ const MembershipRegistrationForm = () => {
 
             {/* Email */}
             <div>
-              <label className="flex items-center text083333-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Mail className="w-4 h-4 mr-2 text-blue-600" />
                 Email <span className="text-red-500 ml-1">*</span>
               </label>
@@ -504,9 +472,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.email ? "border-red-500" : "border-gray-300"
+                  errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter your email address"
+                disabled={isViewMode}
                 required
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -524,9 +493,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.mobileNo}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.mobileNo ? "border-red-500" : "border-gray-300"
+                  errors.mobileNo ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter 10-digit mobile number"
+                disabled={isViewMode}
                 required
               />
               {errors.mobileNo && <p className="text-red-500 text-sm mt-1">{errors.mobileNo}</p>}
@@ -544,9 +514,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.qualification}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.qualification ? "border-red-500" : "border-gray-300"
+                  errors.qualification ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter your qualification"
+                disabled={isViewMode}
                 required
               />
               {errors.qualification && <p className="text-red-500 text-sm mt-1">{errors.qualification}</p>}
@@ -564,8 +535,9 @@ const MembershipRegistrationForm = () => {
                 value={formData.dob}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.dob ? "border-red-500" : "border-gray-300"
+                  errors.dob ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isViewMode}
                 required
               />
               {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
@@ -583,10 +555,11 @@ const MembershipRegistrationForm = () => {
                 value={formData.uniqueId}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.uniqueId ? "border-red-500" : "border-gray-300"
+                  errors.uniqueId ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter 12-digit Aadhar number"
                 maxLength="12"
+                disabled={isViewMode}
                 required
               />
               {errors.uniqueId && <p className="text-red-500 text-sm mt-1">{errors.uniqueId}</p>}
@@ -603,8 +576,9 @@ const MembershipRegistrationForm = () => {
                 value={formData.bloodGroup}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.bloodGroup ? "border-red-500" : "border-gray-300"
+                  errors.bloodGroup ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isViewMode}
               >
                 {bloodGroupOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -627,9 +601,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.memberDivision}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.memberDivision ? "border-red-500" : "border-gray-300"
+                  errors.memberDivision ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter member division"
+                disabled={isViewMode}
               />
               {errors.memberDivision && <p className="text-red-500 text-sm mt-1">{errors.memberDivision}</p>}
             </div>
@@ -646,9 +621,10 @@ const MembershipRegistrationForm = () => {
                 value={formData.memberWorkLocation}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.memberWorkLocation ? "border-red-500" : "border-gray-300"
+                  errors.memberWorkLocation ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter work location"
+                disabled={isViewMode}
               />
               {errors.memberWorkLocation && <p className="text-red-500 text-sm mt-1">{errors.memberWorkLocation}</p>}
             </div>
@@ -665,8 +641,9 @@ const MembershipRegistrationForm = () => {
                 value={formData.validTill}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                  errors.validTill ? "border-red-500" : "border-gray-300"
+                  errors.validTill ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isViewMode}
               />
               {errors.validTill && <p className="text-red-500 text-sm mt-1">{errors.validTill}</p>}
             </div>
@@ -684,9 +661,10 @@ const MembershipRegistrationForm = () => {
               onChange={handleInputChange}
               rows={4}
               className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none ${
-                errors.address ? "border-red-500" : "border-gray-300"
+                errors.address ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter your complete residential address"
+              disabled={isViewMode}
               required
             />
             {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
@@ -703,8 +681,9 @@ const MembershipRegistrationForm = () => {
               value={formData.memberDesignation}
               onChange={handleInputChange}
               className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                errors.memberDesignation ? "border-red-500" : "border-gray-300"
+                errors.memberDesignation ? 'border-red-500' : 'border-gray-300'
               }`}
+              disabled={isViewMode}
               required
             >
               {designationOptions.map((option) => (
@@ -717,29 +696,47 @@ const MembershipRegistrationForm = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center pt-4">
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${
-                isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
-              } text-white`}
-            >
-              {isLoading ? (
-                <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Submitting Registration...
-                </>
-              ) : (
-                <>
-                    <Send className="w-5 h-5 mr-2" />
-                    Submit Registration
-                </>
-              )}
-            </button>
+          <div className="flex justify-center pt-4 gap-4">
+            {isViewMode ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex items-center justify-center px-8 py-3 font-medium bg-gray-300 text-gray-700 hover:bg-gray-400 transition-all duration-200"
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`flex items-center justify-center px-8 py-3 font-medium transition-all duration-200 ${
+                    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                  } text-white`}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Updating Member...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5 mr-2" />
+                      Update Member
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="flex items-center justify-center px-8 py-3 font-medium bg-gray-300 text-gray-700 hover:bg-gray-400 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

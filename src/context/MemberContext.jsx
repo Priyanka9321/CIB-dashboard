@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../auth/AuthContext'; 
+import { AuthContext } from '../auth/AuthContext';
 
 export const MemberContext = createContext();
 
 export const MemberProvider = ({ children }) => {
+  
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const { token } = useContext(AuthContext) || {};
@@ -18,43 +19,34 @@ export const MemberProvider = ({ children }) => {
   const fetchMembers = async () => {
     try {
       const response = await api.get('/members');
-      console.log('API Response:', response.data);
       if (Array.isArray(response.data)) {
         setData(response.data);
         setError(null);
       } else {
-        console.error('API did not return an array:', response.data);
         setData([]);
         setError('Invalid data format received from server.');
       }
     } catch (error) {
-      console.error('Error fetching members:', error.response || error);
       setData([]);
-      setError(
-        error.response?.data?.error || 'Failed to fetch members. Please check the server connection.'
-      );
+      setError(error.response?.data?.error || 'Failed to fetch members.');
     }
   };
 
   const searchMembers = async (term) => {
     try {
       const response = await api.get(`/members/search?query=${term}`);
-      console.log('Search API Response:', response.data);
       if (Array.isArray(response.data)) {
         setData(response.data);
         setError(null);
+        return true;
       } else {
-        console.error('Search API did not return an array:', response.data);
         setData([]);
         setError('Invalid search results format.');
+        return false;
       }
-      return true; // Indicate success to reset currentPage
     } catch (error) {
-      console.error('Error searching members:', error.response || error);
       setData([]);
-      setError(
-        error.response?.data?.error || 'Failed to search members. Please try again.'
-      );
+      setError(error.response?.data?.error || 'Failed to search members.');
       return false;
     }
   };
@@ -62,14 +54,10 @@ export const MemberProvider = ({ children }) => {
   const viewDetails = async (userId) => {
     try {
       const response = await api.get(`/members/${userId}/details`);
-      console.log('Member Details:', response.data);
       setError(null);
-      return response.data; // Return member data for modal
+      return response.data;
     } catch (error) {
-      console.error('Error fetching member details:', error.response || error);
-      setError(
-        error.response?.data?.error || 'Failed to fetch member details.'
-      );
+      setError(error.response?.data?.error || 'Failed to fetch member details.');
       return null;
     }
   };
@@ -77,14 +65,11 @@ export const MemberProvider = ({ children }) => {
   const verifyMember = async (userId) => {
     try {
       await api.patch(`/members/${userId}/verify`);
-      await fetchMembers(); // Refresh data
+      await fetchMembers();
       setError(null);
       return true;
     } catch (error) {
-      console.error('Error verifying member:', error.response || error);
-      setError(
-        error.response?.data?.error || 'Failed to verify member.'
-      );
+      setError(error.response?.data?.error || 'Failed to verify member.');
       return false;
     }
   };
@@ -92,15 +77,39 @@ export const MemberProvider = ({ children }) => {
   const deleteMember = async (userId) => {
     try {
       await api.patch(`/members/${userId}/delete`);
-      await fetchMembers(); // Refresh data
+      await fetchMembers();
       setError(null);
       return true;
     } catch (error) {
-      console.error('Error deleting member:', error.response || error);
-      setError(
-        error.response?.data?.error || 'Failed to delete member.'
-      );
+      setError(error.response?.data?.error || 'Failed to delete member.');
       return false;
+    }
+  };
+
+  const updateMember = async (userId, formData) => {
+    try {
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key !== 'profilePic' && key !== 'signature' && formData[key] !== null && formData[key] !== undefined) {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+      if (formData.profilePic instanceof File) {
+        formDataToSend.append('photoPath', formData.profilePic);
+      }
+      if (formData.signature instanceof File) {
+        formDataToSend.append('signaturePath', formData.signature);
+      }
+
+      const response = await api.patch(`/members/${userId}/edit`, formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      await fetchMembers();
+      setError(null);
+      return response.data;
+    } catch (error) {
+      setError(error.response?.data?.error || 'Failed to update member.');
+      return null;
     }
   };
 
@@ -114,6 +123,7 @@ export const MemberProvider = ({ children }) => {
         viewDetails,
         verifyMember,
         deleteMember,
+        updateMember,
       }}
     >
       {children}
