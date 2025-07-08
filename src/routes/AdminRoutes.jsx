@@ -31,8 +31,8 @@ const AdminRoutes = () => {
       path="/admin/*"
       element={
         <PrivateRoute allowedRoles={["admin"]}>
-          <AdminLayout />
-        </PrivateRoute>
+      <AdminLayout />
+    </PrivateRoute>
       }
     >
       <Route path="dashboard" element={<AdminDashboard />} />

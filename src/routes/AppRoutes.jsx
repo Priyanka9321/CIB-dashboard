@@ -10,11 +10,13 @@ import CongratulationsPopup from "../components/CongratulationsPopup";
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
-  
 
   if (loading) {
     return <div>Loading...</div>;
   }
+
+  console.log("AppRoutes - user:", user);
+  console.log("AppRoutes - user.userRole:", user?.userRole); // Updated to userRole
 
   return (
     <>
@@ -23,13 +25,13 @@ const AppRoutes = () => {
           path="/"
           element={
             !user ? (
-              <Navigate to="/sign-up" />
-            ) : user.role?.toLowerCase() === "admin" ? (
+              <Navigate to="/sign-in" />
+            ) : user.userRole?.toLowerCase() === "admin" ? ( // Updated to userRole
               <Navigate to="/admin/dashboard" />
-            ) : user.role?.toLowerCase() === "user" ? (
+            ) : user.userRole?.toLowerCase() === "user" ? ( // Updated to userRole
               <Navigate to="/user/dashboard" />
             ) : (
-              <Navigate to="/unauthorized" />
+              <Navigate to="/sign-in" />
             )
           }
         />
@@ -42,7 +44,7 @@ const AppRoutes = () => {
         <Route path="/unauthorized" element={<h1>Unauthorized - 403</h1>} />
         <Route path="*" element={<h1>404 - Not Found</h1>} />
       </Routes>
-      {user && user.role?.toLowerCase() === "user" && <CongratulationsPopup />}
+      {user && user.userRole?.toLowerCase() === "user" && <CongratulationsPopup />} {/* Updated to userRole */}
     </>
   );
 };
