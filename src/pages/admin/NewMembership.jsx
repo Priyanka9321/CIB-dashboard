@@ -126,7 +126,7 @@ const NewMembership = () => {
   const currentData = Array.isArray(data) ? data.slice(startIndex, endIndex) : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {showForm ? (
           <MembershipRegistrationForm
