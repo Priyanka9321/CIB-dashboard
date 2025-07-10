@@ -102,9 +102,29 @@
 
 // updated by sumit
 
+
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+
+// ✅ Helper: format yyyy-mm-dd → dd-mm-yyyy
+const formatDateForInput = (isoDate) => {
+  if (!isoDate) return "";
+  const [year, month, day] = isoDate.split("-");
+  return `${day}-${month}-${year}`;
+};
+
+// ✅ Helper: format dd-mm-yyyy → yyyy-mm-dd
+const formatDateForServer = (dateStr) => {
+  if (!dateStr) return "";
+  const [day, month, year] = dateStr.split("-");
+  return `${year}-${month}-${day}`;
+};
+
+// ✅ Regex validators
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mobileRegex = /^[0-9]{10}$/;
+const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
 
 const MemberDetails = () => {
   const location = useLocation();
@@ -121,7 +141,6 @@ const MemberDetails = () => {
     role: "",
     verifiedBy: "",
 
-    // member_forms
     fatherName: "",
     dob: "",
     qualification: "",
@@ -135,7 +154,7 @@ const MemberDetails = () => {
     bloodGroup: "",
   });
 
-  // ✅ Fetch full user+member_forms data
+  // ✅ Fetch member data
   useEffect(() => {
     if (!userId) return;
 
@@ -145,15 +164,15 @@ const MemberDetails = () => {
         const data = res.data;
 
         setFormData({
-          name: data.userFullName || "",
+          name: data.userFullName  || "",
           email: data.userEmail || "",
           mobile: data.userMobile || "",
           accountStatus: data.accountStatus || "",
           role: data.role || "",
-          verifiedBy: data.verifiedBy || "",
+          verifiedBy: data.verifyDate || "",
 
           fatherName: data.fatherName || "",
-          dob: data.dob || "",
+          dob: data.dob ? formatDateForInput(data.dob) : "",
           qualification: data.qualification || "",
           address: data.address || "",
           photoPath: data.photoPath || "",
@@ -161,26 +180,79 @@ const MemberDetails = () => {
           memberDesignation: data.memberDesignation || "",
           memberDivision: data.memberDivision || "",
           memberWorkLocation: data.memberWorkLocation || "",
-          validTill: data.validTill || "",
+          validTill: data.validTill ? formatDateForInput(data.validTill) : "",
           bloodGroup: data.bloodGroup || "",
         });
       })
       .catch((err) => console.error("Error fetching member details", err));
   }, [userId]);
 
+  // ✅ Validate and Submit
   const handleSave = async () => {
-    try {
-      await axios.patch(
-        `http://localhost:5000/api/v1/members/${userId}/edit`,
-        formData
-      );
-      alert("Member details updated successfully!");
-      navigate(-1);
-    } catch (err) {
-      console.error("Update failed:", err);
-      alert("Update failed. Please try again.");
-    }
-  };
+  const {
+    name,
+    email,
+    mobile,
+    dob,
+    validTill,
+  } = formData;
+
+  if (!name || !email || !mobile || !dob) {
+    alert("Please fill in Name, Email, Mobile, and DOB.");
+    return;
+  }
+
+  if (!emailRegex.test(email)) {
+    alert("Invalid email format.");
+    return;
+  }
+
+  if (!mobileRegex.test(mobile)) {
+    alert("Mobile must be 10 digits.");
+    return;
+  }
+
+  if (!dateRegex.test(dob)) {
+    alert("DOB must be in dd-mm-yyyy format.");
+    return;
+  }
+
+  if (validTill && !dateRegex.test(validTill)) {
+    alert("Valid Till must be in dd-mm-yyyy format.");
+    return;
+  }
+
+  try {
+    await axios.patch(`http://localhost:5000/api/v1/members/${userId}/edit`, {
+      name: formData.name,
+      email: formData.email,
+      mobile: formData.mobile,
+      accountStatus: formData.accountStatus,
+      userType: formData.role,
+      verifiedBy: formData.verifiedBy,
+
+      fatherName: formData.fatherName,
+      qualification: formData.qualification,
+      dateOfBirth: formatDateForServer(formData.dob), // ✅ Correct key for backend
+      aadharCardNo: formData.uniqueId || "",           // optional fallback
+      address: formData.address,
+      memberDesignation: formData.memberDesignation,
+      memberDivision: formData.memberDivision,
+      memberWorkLocation: formData.memberWorkLocation,
+      validTill: formData.validTill
+        ? formatDateForServer(formData.validTill)
+        : null,
+      bloodGroup: formData.bloodGroup,
+    });
+
+    alert("Member details updated successfully!");
+    navigate(-1);
+  } catch (err) {
+    console.error("Update failed:", err);
+    alert("Update failed. Please try again.");
+  }
+};
+
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6 mt-6">
@@ -201,6 +273,9 @@ const MemberDetails = () => {
               {isEdit ? (
                 <input
                   type="text"
+                  placeholder={
+                    key === "dob" || key === "validTill" ? "dd-mm-yyyy" : ""
+                  }
                   name={key}
                   value={formData[key] || ""}
                   onChange={(e) =>
