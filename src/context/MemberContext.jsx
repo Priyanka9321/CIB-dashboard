@@ -1,11 +1,11 @@
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../auth/AuthContext';
+import { toast } from "react-toastify";
 
 export const MemberContext = createContext();
 
 export const MemberProvider = ({ children }) => {
-  
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
   const { token } = useContext(AuthContext) || {};
@@ -29,6 +29,7 @@ export const MemberProvider = ({ children }) => {
     } catch (error) {
       setData([]);
       setError(error.response?.data?.error || 'Failed to fetch members.');
+      toast.error(error.response?.data?.error || 'Failed to fetch members.');
     }
   };
 
@@ -47,6 +48,7 @@ export const MemberProvider = ({ children }) => {
     } catch (error) {
       setData([]);
       setError(error.response?.data?.error || 'Failed to search members.');
+      toast.error(error.response?.data?.error || 'Failed to search members.');
       return false;
     }
   };
@@ -58,6 +60,7 @@ export const MemberProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to fetch member details.');
+      toast.error(error.response?.data?.error || 'Failed to fetch member details.');
       return null;
     }
   };
@@ -70,6 +73,7 @@ export const MemberProvider = ({ children }) => {
       return true;
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to verify member.');
+      toast.error(error.response?.data?.error || 'Failed to verify member.');
       return false;
     }
   };
@@ -82,6 +86,7 @@ export const MemberProvider = ({ children }) => {
       return true;
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to delete member.');
+      toast.error(error.response?.data?.error || 'Failed to delete member.');
       return false;
     }
   };
@@ -96,9 +101,13 @@ export const MemberProvider = ({ children }) => {
       });
       if (formData.profilePic instanceof File) {
         formDataToSend.append('photoPath', formData.profilePic);
+      } else if (formData.profilePic?.path) {
+        formDataToSend.append('photoPath', formData.profilePic.path);
       }
       if (formData.signature instanceof File) {
         formDataToSend.append('signaturePath', formData.signature);
+      } else if (formData.signature?.path) {
+        formDataToSend.append('signaturePath', formData.signature.path);
       }
 
       const response = await api.patch(`/members/${userId}/edit`, formDataToSend, {
@@ -109,6 +118,7 @@ export const MemberProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to update member.');
+      toast.error(error.response?.data?.error || 'Failed to update member.');
       return null;
     }
   };

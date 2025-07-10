@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   Droplet,
+  ArrowLeft,
 } from 'lucide-react';
 
 const Toast = ({ message, type, onClose, downloadLinks }) => {
@@ -67,6 +68,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
     profilePic: null,
     signature: null,
     formType: 'membership',
+    accountStatus: 'active',
   });
   const [profilePreview, setProfilePreview] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
@@ -94,6 +96,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
         profilePic: initialData.profilePic || null,
         signature: initialData.signature || null,
         formType: 'membership',
+        accountStatus: initialData.accountStatus || 'active',
       });
       setProfilePreview(initialData.profilePic?.path || null);
       setSignaturePreview(initialData.signature?.path || null);
@@ -122,6 +125,13 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
     { value: 'AB-', label: 'AB-' },
     { value: 'O+', label: 'O+' },
     { value: 'O-', label: 'O-' },
+  ];
+
+  const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'blocked', label: 'Blocked' },
+    { value: 'deleted', label: 'Deleted' },
   ];
 
   const showToast = (message, type, downloadLinks = null) => {
@@ -205,49 +215,17 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
   };
 
   const checkIfFormEmpty = () => {
-    const requiredFields = [
-      'fullName',
-      'fatherName',
-      'email',
-      'mobileNo',
-      'qualification',
-      'dob',
-      'uniqueId',
-      'address',
-      'memberDesignation',
-    ];
+    const requiredFields = ['email', 'uniqueId']; // Only email and uniqueId are required
     return requiredFields.every((field) => !formData[field]?.toString().trim());
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Name is required';
-    }
-
-    if (!formData.fatherName.trim()) {
-      newErrors.fatherName = "Father's name is required";
-    }
-
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.mobileNo.trim()) {
-      newErrors.mobileNo = 'Mobile number is required';
-    } else if (!/^\d{10}$/.test(formData.mobileNo.replace(/\D/g, ''))) {
-      newErrors.mobileNo = 'Please enter a valid 10-digit mobile number';
-    }
-
-    if (!formData.qualification.trim()) {
-      newErrors.qualification = 'Qualification is required';
-    }
-
-    if (!formData.dob) {
-      newErrors.dob = 'Date of birth is required';
     }
 
     if (!formData.uniqueId.trim()) {
@@ -256,16 +234,34 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
       newErrors.uniqueId = 'Please enter a valid 12-digit Aadhar number';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-
-    if (!formData.memberDesignation) {
-      newErrors.memberDesignation = 'Please select a designation';
+    if (!formData.accountStatus) {
+      newErrors.accountStatus = 'Please select an account status';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const hasFormDataChanged = () => {
+    if (!initialData) return true;
+    return (
+      formData.fullName !== (initialData.fullName || '') ||
+      formData.fatherName !== (initialData.fatherName || '') ||
+      formData.email !== (initialData.email || '') ||
+      formData.mobileNo !== (initialData.mobileNo || '') ||
+      formData.qualification !== (initialData.qualification || '') ||
+      formData.dob !== (initialData.dob || '') ||
+      formData.uniqueId !== (initialData.uniqueId || '') ||
+      formData.address !== (initialData.address || '') ||
+      formData.memberDivision !== (initialData.memberDivision || '') ||
+      formData.memberWorkLocation !== (initialData.memberWorkLocation || '') ||
+      formData.validTill !== (initialData.validTill || '') ||
+      formData.bloodGroup !== (initialData.bloodGroup || '') ||
+      formData.memberDesignation !== (initialData.memberDesignation || '') ||
+      formData.accountStatus !== (initialData.accountStatus || 'active') ||
+      (formData.profilePic instanceof File && formData.profilePic !== initialData.profilePic) ||
+      (formData.signature instanceof File && formData.signature !== initialData.signature)
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -277,7 +273,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
 
     if (checkIfFormEmpty()) {
       setShowAllFieldsError(true);
-      showToast('All required fields must be filled!', 'error');
+      showToast('Email and Aadhar number are required!', 'error');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -289,15 +285,42 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
       return;
     }
 
+    if (!hasFormDataChanged()) {
+      showToast('No changes were made to the form.', 'info');
+      onCancel();
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await onSubmit(formData);
-      showToast('Member details updated successfully!', 'success');
+      const result = await onSubmit(formData);
+      if (result.hasChanges) {
+        showToast('Member details updated successfully!', 'success', {
+          form: result.downloadForm,
+          idCard: result.downloadIDCard,
+        });
+        onCancel();
+      } else {
+        showToast('No changes were made to the member details.', 'info');
+        onCancel();
+      }
     } catch (error) {
       showToast(error.message || 'Failed to update member.', 'error');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const BackButton = () => {
+    return (
+      <button
+        onClick={onCancel}
+        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        <ArrowLeft className="w-5 h-5 mr-2" />
+        Back
+      </button>
+    );
   };
 
   return (
@@ -312,15 +335,16 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
       )}
 
       <div className="bg-white shadow-xl p-8 w-full max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">
             {isViewMode ? 'View Member Details' : 'Edit Member Details'}
           </h1>
+          <BackButton />
         </div>
 
         {showAllFieldsError && (
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
-            All required fields must be filled!
+            Email and Aadhar number are required!
           </div>
         )}
 
@@ -330,7 +354,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div className="md:col-span-2">
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Camera className="w-4 h-4 mr-2 text-blue-600" />
-                Profile Picture <span className="text-red-500 ml-1">*</span>
+                Profile Picture
               </label>
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 overflow-hidden bg-gray-100 border-2 border-gray-300 flex-shrink-0">
@@ -422,7 +446,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <User className="w-4 h-4 mr-2 text-blue-600" />
-                Full Name <span className="text-red-500 ml-1">*</span>
+                Full Name
               </label>
               <input
                 type="text"
@@ -434,7 +458,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 }`}
                 placeholder="Enter your full name"
                 disabled={isViewMode}
-                required
               />
               {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
             </div>
@@ -443,7 +466,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <User className="w-4 h-4 mr-2 text-blue-600" />
-                Father Name <span className="text-red-500 ml-1">*</span>
+                Father Name
               </label>
               <input
                 type="text"
@@ -455,7 +478,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 }`}
                 placeholder="Enter father's name"
                 disabled={isViewMode}
-                required
               />
               {errors.fatherName && <p className="text-red-500 text-sm mt-1">{errors.fatherName}</p>}
             </div>
@@ -485,7 +507,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Phone className="w-4 h-4 mr-2 text-blue-600" />
-                Mobile Number <span className="text-red-500 ml-1">*</span>
+                Mobile Number
               </label>
               <input
                 type="tel"
@@ -497,7 +519,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 }`}
                 placeholder="Enter 10-digit mobile number"
                 disabled={isViewMode}
-                required
               />
               {errors.mobileNo && <p className="text-red-500 text-sm mt-1">{errors.mobileNo}</p>}
             </div>
@@ -506,7 +527,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
-                Qualification <span className="text-red-500 ml-1">*</span>
+                Qualification
               </label>
               <input
                 type="text"
@@ -518,7 +539,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 }`}
                 placeholder="Enter your qualification"
                 disabled={isViewMode}
-                required
               />
               {errors.qualification && <p className="text-red-500 text-sm mt-1">{errors.qualification}</p>}
             </div>
@@ -527,7 +547,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                 <Calendar className="w-4 h-4 mr-2 text-blue-600" />
-                Date of Birth <span className="text-red-500 ml-1">*</span>
+                Date of Birth
               </label>
               <input
                 type="date"
@@ -538,7 +558,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                   errors.dob ? 'border-red-500' : 'border-gray-300'
                 }`}
                 disabled={isViewMode}
-                required
               />
               {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
             </div>
@@ -587,6 +606,31 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 ))}
               </select>
               {errors.bloodGroup && <p className="text-red-500 text-sm mt-1">{errors.bloodGroup}</p>}
+            </div>
+
+            {/* Account Status */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Users className="w-4 h-4 mr-2 text-blue-600" />
+                Account Status <span className="text-red-500 ml-1">*</span>
+              </label>
+              <select
+                name="accountStatus"
+                value={formData.accountStatus}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
+                  errors.accountStatus ? 'border-red-500' : 'border-gray-300'
+                }`}
+                disabled={isViewMode}
+                required
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.accountStatus && <p className="text-red-500 text-sm mt-1">{errors.accountStatus}</p>}
             </div>
 
             {/* Member Division */}
@@ -653,7 +697,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <MapPin className="w-4 h-4 mr-2 text-blue-600" />
-              Complete Address <span className="text-red-500 ml-1">*</span>
+              Complete Address
             </label>
             <textarea
               name="address"
@@ -665,7 +709,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
               }`}
               placeholder="Enter your complete residential address"
               disabled={isViewMode}
-              required
             />
             {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
           </div>
@@ -674,7 +717,7 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Users className="w-4 h-4 mr-2 text-blue-600" />
-              Select Designation <span className="text-red-500 ml-1">*</span>
+              Select Designation
             </label>
             <select
               name="memberDesignation"
@@ -684,7 +727,6 @@ const MembershipRegistrationForm = ({ initialData, isViewMode = false, onSubmit,
                 errors.memberDesignation ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={isViewMode}
-              required
             >
               {designationOptions.map((option) => (
                 <option key={option.value} value={option.value}>
