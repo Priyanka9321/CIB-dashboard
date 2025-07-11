@@ -213,7 +213,7 @@ const ActiveMembers = () => {
       const res = await axios.get(`${API_BASE}`);
       setData(res.data);
     } catch (err) {
-      setError("Failed to load members");
+      setError(err.response?.data?.message || "Failed to load members");
     } finally {
       setLoading(false);
     }
@@ -248,6 +248,7 @@ const ActiveMembers = () => {
       switch (action) {
         case "View":
           const mapped = {
+            userId: member.userId,
             name: member.fullName,
             email: member.userEmail,
             mobile: member.userMobile,
@@ -323,31 +324,39 @@ const ActiveMembers = () => {
 
         case "Deactivate":
           const confirmToggle = window.confirm(
-            `Are you sure you want to ${
-              member.status === "active" ? "deactivate" : "activate"
-            } this user?`
+            `Are you sure you want to deactivate ${member.fullName}?`
           );
           if (!confirmToggle) return;
 
-          const toggleUrl =
-            member.status === "active"
-              ? `${API_BASE}/${id}/deactivate`
-              : `${API_BASE}/${id}/activate`;
+          try {
+            await axios.patch(`${API_BASE}/${id}/deactivate`);
 
-          await axios.patch(toggleUrl);
+            // ✅ Remove user from UI after successful deactivation
+            setData((prev) => prev.filter((user) => user.userId !== id));
+          } catch (err) {
+            console.error("Deactivation failed:", err.message);
+          }
           break;
 
         case "Block":
+          if (member.status === "blocked") return;
+
           const confirmBlock = window.confirm(
             `Are you sure you want to block ${member.fullName}?`
           );
           if (!confirmBlock) return;
 
-          await axios.patch(`${API_BASE}/${id}/block`);
+          try {
+            await axios.patch(`${API_BASE}/${id}/block`);
+
+            // ✅ Remove from current UI
+            setData((prev) => prev.filter((user) => user.userId !== id));
+          } catch (err) {
+            console.error("Block failed:", err.message);
+          }
           break;
 
         case "Edit":
-          
           const editMapped = {
             userId: member.userId,
             name: member.fullName,
@@ -392,7 +401,6 @@ const ActiveMembers = () => {
         default:
           return;
       }
-      
     } catch (err) {
       console.error(`${action} failed:`, err.message);
     }
@@ -482,14 +490,14 @@ const ActiveMembers = () => {
                 {item.userMobile}
                 <span
                   className={`ml-1 inline-block px-2 py-0.5 text-xs rounded ${
-                    item.status === "active"
+                    item.accountStatus === "active"
                       ? "bg-green-100 text-green-700"
-                      : item.status === "blocked"
+                      : item.accountStatus === "blocked"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {item.status}
+                  {item.accountStatus}
                 </span>
               </td>
               <td className="p-1 text-xs truncate">
@@ -511,19 +519,21 @@ const ActiveMembers = () => {
               <td className="p-1 text-xs gap-1">
                 <button
                   onClick={() => handleClick("Deactivate", item)}
-                  className={`${
-                    item.status === "active"
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  } text-white px-2 py-0.5 rounded text-xs`}
+                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
                 >
-                  {item.status === "active" ? "Deactivate" : "Activate"}
+                  Deactivate
                 </button>
+
                 <button
                   onClick={() => handleClick("Block", item)}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-0.5 rounded text-xs ml-1"
+                  className={`${
+                    item.accountStatus === "blocked"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                  } px-2 py-0.5 rounded text-xs ml-1`}
+                  disabled={item.accountStatus === "blocked"}
                 >
-                  Block
+                  {item.accountStatus === "blocked" ? "Blocked" : "Block"}
                 </button>
               </td>
 

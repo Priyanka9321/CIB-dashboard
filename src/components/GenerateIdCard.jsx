@@ -187,7 +187,7 @@ import axios from "axios";
 
 const GenerateIdCard = () => {
   const location = useLocation();
-  const passedMember = location.state; // from navigate(..., { state: member })
+  const passedMember = location.state; 
 
   const [userInfo, setUserInfo] = useState(passedMember || null);
   const [qrImage, setQrImage] = useState(null);
@@ -232,26 +232,6 @@ const GenerateIdCard = () => {
     }, 300);
   };
 
-  const printCard = () => {
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>ID Card</title>
-          <style>
-            body { margin: 0; padding: 20px; font-family: sans-serif; }
-            .card { width: 350px; height: 550px; margin: auto; border: 4px solid black; }
-          </style>
-        </head>
-        <body>
-          ${cardRef.current.outerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  };
 
   if (!userInfo)
     return <p className="text-center text-gray-500">Loading ID card...</p>;
@@ -338,13 +318,7 @@ const GenerateIdCard = () => {
           <Download className="w-5 h-5" />
           Download PDF
         </button>
-        <button
-          onClick={printCard}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg flex items-center gap-2"
-        >
-          <Printer className="w-5 h-5" />
-          Print
-        </button>
+        
       </div>
     </div>
   );

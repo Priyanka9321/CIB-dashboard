@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Search, Eye, CheckCircle, Edit, Trash2, Users, Filter, X } from 'lucide-react';
 import { MemberContext } from '../../context/MemberContext';
-import MembershipRegistrationForm from '../user/MembershipRegistrationForm'; 
+import MembershipRegistrationForm from '../user/MembershipRegistrationForm';
+import { toast } from "react-toastify";
 
 const NewMembership = () => {
- 
   const { data, error, fetchMembers, searchMembers, viewDetails, verifyMember, deleteMember, updateMember } =
     useContext(MemberContext);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(false); 
-  const [showForm, setShowForm] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [viewMode, setViewMode] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -43,6 +43,8 @@ const NewMembership = () => {
         uniqueId: member.uniqueId || '',
         profilePic: member.photoPath ? { path: `http://localhost:5000/${member.photoPath}` } : null,
         signature: member.signaturePath ? { path: `http://localhost:5000/${member.signaturePath}` } : null,
+        dob: member.dob || '',
+        accountStatus: member.accountStatus || 'inactive', // Include accountStatus
       });
       setViewMode(true);
       setShowForm(true);
@@ -59,6 +61,8 @@ const NewMembership = () => {
         uniqueId: member.uniqueId || '',
         profilePic: member.photoPath ? { path: `http://localhost:5000/${member.photoPath}` } : null,
         signature: member.signaturePath ? { path: `http://localhost:5000/${member.signaturePath}` } : null,
+        dob: member.dob || '',
+        accountStatus: member.accountStatus || 'inactive', // Include accountStatus
       });
       setViewMode(false);
       setShowForm(true);
@@ -66,30 +70,52 @@ const NewMembership = () => {
   };
 
   const handleFormSubmit = async (formData) => {
-    if (!viewMode) {
-      const result = await updateMember(selectedMember.userId, formData);
-      if (result) {
-        setShowForm(false);
-        setSelectedMember(null);
-      }
-    } else {
+  if (!viewMode) {
+    const result = await updateMember(selectedMember.userId, formData);
+    if (result && result.hasChanges) {
+      setShowForm(false);
+      setSelectedMember(null);
+      toast.success('Member updated successfully!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } else if (result && !result.hasChanges) {
+      toast.info('No changes were made to the member details.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       setShowForm(false);
       setSelectedMember(null);
     }
-  };
-
+  } else {
+    setShowForm(false);
+    setSelectedMember(null);
+  }
+};
   const handleFormCancel = () => {
     setShowForm(false);
     setSelectedMember(null);
   };
 
   const handleVerify = async (userId) => {
-    await verifyMember(userId);
+    const success = await verifyMember(userId);
+    if (success) {
+      toast.success('Member verified successfully!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    }
   };
 
   const handleDelete = async (userId) => {
     if (window.confirm('Are you sure you want to delete this member?')) {
-      await deleteMember(userId);
+      const success = await deleteMember(userId);
+      if (success) {
+        toast.success('Member deleted successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+      }
     }
   };
 
@@ -100,7 +126,7 @@ const NewMembership = () => {
   const currentData = Array.isArray(data) ? data.slice(startIndex, endIndex) : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {showForm ? (
           <MembershipRegistrationForm
@@ -171,6 +197,7 @@ const NewMembership = () => {
                         <th className="px-3 py-3 text-left text-sm font-semibold">Email</th>
                         <th className="px-3 py-3 text-left text-sm font-semibold">Mobile</th>
                         <th className="px-3 py-3 text-left text-sm font-semibold">Reg. Date</th>
+                        <th className="px-3 py-3 text-left text-sm font-semibold">Account Status</th>
                         <th className="px-3 py-3 text-left text-sm font-semibold">Payment Status</th>
                         <th className="px-3 py-3 text-left text-sm font-semibold">Designation</th>
                         <th className="px-3 py-3 text-center text-sm font-semibold">Actions</th>
@@ -191,11 +218,28 @@ const NewMembership = () => {
                           <td className="px-3 py-3 text-sm">
                             <span
                               className={`inline-flex items-center px-3 py-1 text-xs font-medium ${
-                                item.paymentStatus === 'success'
+                                item.accountStatus === 'active'
                                   ? 'bg-green-100 text-green-800'
-                                  : item.paymentStatus === 'pending'
+                                  : item.accountStatus === 'inactive'
                                   ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
+                                  : item.accountStatus === 'blocked'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {item.accountStatus || 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm">
+                            <span
+                              className={`inline-flex items-center px-3 py-1 text-xs font-medium ${
+                                item.paymentStatus === 'paid'
+                                  ? 'bg-green-100 text-green-800'
+                                : item.paymentStatus === 'unpaid'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : item.paymentStatus === 'failed'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
                               }`}
                             >
                               {item.paymentStatus || 'Unpaid'}
@@ -214,6 +258,7 @@ const NewMembership = () => {
                               <button
                                 onClick={() => handleVerify(item.userId)}
                                 className="inline-flex items-center px-3 py-1.5 bg-green-500 text-white hover:bg-green-600 transition-colors text-xs font-medium"
+                                disabled={item.accountStatus === 'active'} // Disable if already active
                               >
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Verify
@@ -228,6 +273,7 @@ const NewMembership = () => {
                               <button
                                 onClick={() => handleDelete(item.userId)}
                                 className="inline-flex items-center px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 transition-colors text-xs font-medium"
+                                disabled={item.accountStatus === 'deleted'} // Disable if already deleted
                               >
                                 <Trash2 className="w-3 h-3 mr-1" />
                                 Delete

@@ -1,38 +1,76 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import axios from "axios";
 
 const AdminReceipt = () => {
   const receiptRef = useRef(null);
   const { state } = useLocation();
+  const [receiptData, setReceiptData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 🧪 MOCK DATA (Replace later with backend API response)
-  const receiptData = state || {
-    // fallback mock data if no state is passed
-    receiptNo: "M/RCP-108",
-    amount: 100,
-    transactionId: "TXN123456789",
-    status: "PAYMENT_SUCCESS",
-    date: "05-07-2025",
-    receivedFrom: "Govind",
-    rupeesInWords: "One Hundred Rupees",
-    address: "Surat, Gujrat",
-    qrData: "M/RCP-108",
-    signatory: {
-      name: "Rajkumar Maurya Maurya",
-      role: "President / Founder",
-      org: "Shri Ram Navyug Trust",
-      title: "Authorised Signatory",
-    },
-  };
+  useEffect(() => {
+    const txnId = state?.transactionId;
+    if (!txnId) {
+      setLoading(false);
+      setReceiptData(null);
+      return;
+    }
+
+    axios
+      .get(`/api/payments/receipt/${txnId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((res) => {
+        setReceiptData(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch receipt data", err);
+        setLoading(false);
+      });
+  }, [state]);
 
   const handleDownload = async () => {
-    const canvas = await html2canvas(receiptRef.current);
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF();
-    pdf.addImage(imgData, "PNG", 0, 0, 210, 297); // A4 size
-    pdf.save("membership_receipt.pdf");
+  if (!receiptRef.current) return;
+
+  const canvas = await html2canvas(receiptRef.current);
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgProps = pdf.getImageProperties(imgData);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+  pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  pdf.save("membership_receipt.pdf");
+};
+
+
+  if (loading) {
+    return (
+      <div className="text-center mt-20 text-gray-500 text-lg">
+        Loading receipt data...
+      </div>
+    );
+  }
+
+  if (!receiptData) {
+    return (
+      <div className="text-center mt-20 text-red-500 text-lg">
+        Error: Receipt not found or failed to load.
+      </div>
+    );
+  }
+
+  const signatory = {
+    name: receiptData.signatoryName || "Rajkumar Maurya",
+    role: "President / Founder",
+    org: "Shri Ram Navyug Trust",
+    title: "Authorised Signatory",
   };
 
   return (
@@ -43,16 +81,22 @@ const AdminReceipt = () => {
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-green-700 p-4 text-white">
-          <img src="/logo.png" alt="Logo" className="w-16 h-16" />
+          <img
+            src="/logo.png"
+            alt="Logo"
+            onError={(e) => (e.target.style.display = "none")}
+          />
           <div className="text-center">
-            <h1 className="text-2xl font-bold">Shri Ram Navyug Trust</h1>
+            <h1 className="text-2xl font-bold">Crime Investigation Bureau</h1>
             <p className="text-sm">Transforming Lives Through Education</p>
             <p className="text-xs">
-              NGO ID:MH/2021/0277920 | Ekta Nagar PGI Lucknow
+              NGO ID: MH/2021/0277920 | Ekta Nagar PGI Lucknow
             </p>
           </div>
           <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${receiptData.qrData}`}
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${
+              receiptData.qrData || receiptData.transactionId
+            }`}
             alt="QR"
             className="w-16 h-16"
           />
@@ -76,27 +120,72 @@ const AdminReceipt = () => {
           </thead>
           <tbody>
             <tr>
-              <td className="border px-2 py-1">{receiptData.receiptNo}</td>
-              <td className="border px-2 py-1">{receiptData.amount}</td>
-              <td className="border px-2 py-1">{receiptData.transactionId}</td>
-              <td className="border px-2 py-1">{receiptData.status}</td>
-              <td className="border px-2 py-1">{receiptData.date}</td>
+              <td className="border px-2 py-1">
+                {receiptData.receiptNo || "N/A"}
+              </td>
+              <td className="border px-2 py-1">
+                {receiptData.amount
+                  ? `₹${parseFloat(receiptData.amount).toFixed(2)}`
+                  : "N/A"}
+              </td>
+              <td className="border px-2 py-1">
+                {receiptData.transactionId || "N/A"}
+              </td>
+              <td className="border px-2 py-1">
+                <span
+                  className={`px-2 py-1 rounded-full text-white text-xs ${
+                    receiptData.status === "PAID"
+                      ? "bg-green-600"
+                      : receiptData.status === "PENDING"
+                      ? "bg-yellow-600"
+                      : "bg-red-600"
+                  }`}
+                >
+                  {receiptData.status || "UNKNOWN"}
+                </span>
+              </td>
+              <td className="border px-2 py-1">
+                {receiptData.createdAt
+                  ? new Date(receiptData.createdAt).toLocaleDateString("en-IN")
+                  : "N/A"}
+              </td>
             </tr>
           </tbody>
         </table>
 
-        {/* Received Info */}
-        <div className="p-4 space-y-1 text-sm">
+        {/* Details */}
+        <div className="p-4 space-y-1 text-sm leading-6">
           <p>
             <span className="font-semibold">Received From:</span>{" "}
-            {receiptData.receivedFrom}
+            {receiptData.receivedFrom || "N/A"}
           </p>
           <p>
             <span className="font-semibold">Rupees (in words):</span>{" "}
-            {receiptData.rupeesInWords}
+            {receiptData.rupeesInWords || "N/A"}
           </p>
           <p>
-            <span className="font-semibold">Address:</span> {receiptData.address}
+            <span className="font-semibold">Email:</span>{" "}
+            {receiptData.userEmail || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">User Mobile:</span>{" "}
+            {receiptData.userMobile || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">Mobile (Entered):</span>{" "}
+            {receiptData.mobile || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">Reg. No:</span>{" "}
+            {receiptData.regNo || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">Form Type:</span>{" "}
+            {receiptData.formType || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">Payment Method:</span>{" "}
+            {receiptData.paymentMethod || "N/A"}
           </p>
         </div>
 
@@ -108,17 +197,17 @@ const AdminReceipt = () => {
           <div className="text-right text-xs">
             <img
               src="/signature.png"
-              alt="Sign"
+              alt="Signature"
               className="w-20 h-10 object-contain"
             />
-            <p className="font-bold">{receiptData.signatory.name}</p>
-            <p>({receiptData.signatory.role})</p>
-            <p>{receiptData.signatory.org}</p>
-            <p>{receiptData.signatory.title}</p>
+            <p className="font-bold">{signatory.name}</p>
+            <p>({signatory.role})</p>
+            <p>{signatory.org}</p>
+            <p>{signatory.title}</p>
           </div>
         </div>
 
-        {/* Bottom Bar */}
+        {/* Contact Info */}
         <div className="bg-green-700 text-white text-xs flex justify-center items-center gap-4 p-2">
           <span>📞 +91 85648 53303</span>
           <span>📧 info@shriramnavyugtrust.org</span>
@@ -126,7 +215,7 @@ const AdminReceipt = () => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Buttons */}
       <div className="flex gap-4 mt-6">
         <button
           onClick={handleDownload}
