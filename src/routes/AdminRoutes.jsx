@@ -22,6 +22,7 @@ import MemberDetails from "../components/MemberDetails";
 import AppointmentLetter from "../components/AppointmentLetter";
 import GenerateIdCard from "../components/GenerateIdCard";
 import AdminReceipt from "../components/AdminReceipt";
+import UserCertificateTable from "../components/UserCertificateTable";
 
 
 
@@ -63,6 +64,7 @@ const AdminRoutes = () => {
       <Route path="appointment-letter" element={<AppointmentLetter />} />
       <Route path="id-card" element={<GenerateIdCard />} />
       <Route path="membership-receipt" element={<AdminReceipt />} />
+      <Route path="usercertificatetable" element={<UserCertificateTable/>}/>
 
 
 

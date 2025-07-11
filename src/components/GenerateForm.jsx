@@ -9,6 +9,9 @@ const GenerateForm = ({ memberId, onGenerate, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [generatedData, setGeneratedData] = useState(null);
+  const [showPreview, setShowPreview] = useState(false); 
+  const [certificateGenerated, setCertificateGenerated] = useState(false); 
+
   const [formData, setFormData] = useState({
     program: '',
     template: 'CONTROLTE1', // Default template
@@ -32,13 +35,21 @@ const GenerateForm = ({ memberId, onGenerate, onClose }) => {
     }
   }, [memberId]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+ const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+
+  if (name === "program") {
+    setShowPreview(true);
+    setCertificateGenerated(false); // Reset generation state if user retypes
+  }
+};
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+
+  if (certificateGenerated) return; // Avoid duplicate submission
 
   try {
     const payload = {
@@ -58,15 +69,14 @@ const handleSubmit = async (e) => {
     };
 
     setGeneratedData(certificateData);
+    setCertificateGenerated(true); // Lock it after generation
+
+    // 🔥 Increment totalCertificates count
+    await axios.patch(`http://localhost:5000/api/certificateTotal/${member.userId}`);
 
     toast.success("🎉 Certificate generated successfully!", {
       position: "top-right",
       autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
     });
 
   } catch (err) {
@@ -215,18 +225,19 @@ const handleSubmit = async (e) => {
   <div className="border border-gray-200 p-4 mb-6 rounded-lg bg-gray-50">
     <h3 className="font-medium text-gray-700 mb-3">Preview:</h3>
     <div className="scale-90 origin-top">
-      {generatedData && (
+      {showPreview && (
         <CertificateTemplate1
-          name={generatedData.name}
-          regNo={generatedData.regNo}
-          program={generatedData.program}
-          issueDate={generatedData.issueDate}
-          certNo={generatedData.certNo}
+          name={member.name}
+          regNo={member.regNo}
+          program={formData.program}
+          issueDate={formData.issueDate}
+          certNo="TEMP-CERT-000" // Or just leave it blank
         />
       )}
     </div>
   </div>
 )}
+
 
 
 
