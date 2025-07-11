@@ -191,6 +191,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  Filter,
+  FileText,
+  CreditCard,
+  Receipt,
+  UserX,
+  Shield,
+} from "lucide-react";
+
 const API_BASE = "http://localhost:5000/api/v1/members";
 
 const ActiveMembers = () => {
@@ -201,6 +215,9 @@ const ActiveMembers = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [showBlockPopup, setShowBlockPopup] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
     fetchMembers();
@@ -307,7 +324,7 @@ const ActiveMembers = () => {
               date:
                 member.paymentDate || new Date().toISOString().split("T")[0],
               receivedFrom: member.fullName,
-              rupeesInWords: "One Hundred Rupees", // Optionally calculate this
+              rupeesInWords: "One Hundred Rupees",
               address: member.city
                 ? `${member.city}, ${member.state || ""}`
                 : "N/A",
@@ -330,8 +347,6 @@ const ActiveMembers = () => {
 
           try {
             await axios.patch(`${API_BASE}/${id}/deactivate`);
-
-            // ✅ Remove user from UI after successful deactivation
             setData((prev) => prev.filter((user) => user.userId !== id));
           } catch (err) {
             console.error("Deactivation failed:", err.message);
@@ -340,20 +355,8 @@ const ActiveMembers = () => {
 
         case "Block":
           if (member.status === "blocked") return;
-
-          const confirmBlock = window.confirm(
-            `Are you sure you want to block ${member.fullName}?`
-          );
-          if (!confirmBlock) return;
-
-          try {
-            await axios.patch(`${API_BASE}/${id}/block`);
-
-            // ✅ Remove from current UI
-            setData((prev) => prev.filter((user) => user.userId !== id));
-          } catch (err) {
-            console.error("Block failed:", err.message);
-          }
+          setSelectedMember(member);
+          setShowBlockPopup(true);
           break;
 
         case "Edit":
@@ -388,14 +391,7 @@ const ActiveMembers = () => {
           if (!confirmDelete) return;
 
           await axios.patch(`${API_BASE}/${id}/delete`);
-          console.log("Delete successful");
-
-          // Option 1: Remove from UI directly
-          // setData((prev) => prev.filter((user) => user.userId !== id));
-
-          // Option 2: Better UX — re-fetch from DB to get accurate count
           await fetchMembers();
-
           return;
 
         default:
@@ -413,173 +409,351 @@ const ActiveMembers = () => {
   const currentData = data.slice(startIndex, endIndex);
 
   return (
-    <div className="p-2 max-w-full mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center">
-          <select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            className="border border-gray-300 rounded p-1 text-xs"
-          >
-            {[10, 25, 50, 100].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <span className="ml-2 text-xs text-gray-600">entries per page</span>
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="bg-white shadow-lg p-6 mb-8 border-l-4 border-blue-500">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-100">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Active Members
+                </h1>
+                <p className="text-gray-600 text-sm">
+                  Manage and view all active member records
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <select
+                  value={entriesPerPage}
+                  onChange={handleEntriesChange}
+                  className="border border-gray-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+              <div className="relative">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by Reg No, Name, Email, Mobile..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="pl-10 pr-4 py-2 border border-gray-300 text-sm w-72 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <h2 className="text-lg font-bold">Active Member Data</h2>
-        <div className="flex items-center">
-          <label className="mr-2 text-xs text-gray-600">Search:</label>
-          <input
-            type="text"
-            placeholder="Enter Reg No, Name or Email"
-            value={searchTerm}
-            onChange={handleSearch}
-            className="border border-gray-300 rounded p-1 text-xs w-48"
-          />
-        </div>
-      </div>
 
-      {/* Loading/Error */}
-      {loading && (
-        <p className="text-center text-sm text-gray-500">Loading members...</p>
-      )}
-      {error && <p className="text-center text-sm text-red-500">{error}</p>}
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white shadow-lg p-6 text-center">
+            <p className="text-gray-600">Loading members...</p>
+          </div>
+        )}
 
-      {/* Table */}
-      <table className="w-full border-collapse bg-gray-50 table-fixed">
-        <thead className="bg-gray-200">
-          <tr>
-            {[
-              "Sr.No.",
-              "Reg.No / NAME / EMAIL / Mobile",
-              "Reg-Date",
-              "View",
-              "Action",
-              "Edit/Delete",
-            ].map((col, idx) => (
-              <th
-                key={idx}
-                className={`p-1 text-left text-xs font-semibold ${
-                  idx === 0
-                    ? "w-[5%]"
-                    : idx === 5
-                    ? "w-[10%]"
-                    : idx === 4
-                    ? "w-[15%]"
-                    : "w-[30%]"
-                }`}
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {currentData.map((item, index) => (
-            <tr
-              key={item.userId || item.regNo || index}
-              className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
-            >
-              <td className="p-1 text-xs truncate">{startIndex + index + 1}</td>
-              <td className="p-1 text-xs truncate">
-                {item.regNo} / {item.fullName} / {item.userEmail} /{" "}
-                {item.userMobile}
-                <span
-                  className={`ml-1 inline-block px-2 py-0.5 text-xs rounded ${
-                    item.accountStatus === "active"
-                      ? "bg-green-100 text-green-700"
-                      : item.accountStatus === "blocked"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {item.accountStatus}
-                </span>
-              </td>
-              <td className="p-1 text-xs truncate">
-                {item.regDate
-                  ? new Date(item.regDate).toLocaleDateString("en-IN")
-                  : "N/A"}
-              </td>
-              <td className="p-1 text-xs flex gap-1 flex-wrap">
-                {["View", "Appt. Letter", "ID Card", "Receipt"].map((label) => (
-                  <button
-                    key={label}
-                    onClick={() => handleClick(label, item)}
-                    className="bg-green-500 text-white px-2 py-0.5 rounded hover:bg-green-600 text-xs"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </td>
-              <td className="p-1 text-xs gap-1">
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 text-red-800 p-4 mb-6 rounded">
+            {error}
+          </div>
+        )}
+
+        {/* Table Section */}
+        {currentData.length > 0 ? (
+          <div className="bg-white shadow-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  <tr>
+                    <th className="px-3 py-3 text-left text-sm font-semibold">
+                      Sr. No.
+                    </th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold">
+                      Reg.No / NAME / EMAIL / Mobile
+                    </th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold">
+                      Reg. Date
+                    </th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold">
+                      View Actions
+                    </th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold">
+                      Account Actions
+                    </th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold">
+                      Edit/Delete
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentData.map((item, index) => (
+                    <tr
+                      key={item.userId || item.regNo || index}
+                      className={`hover:bg-blue-50 transition-colors ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="px-3 py-3 text-sm font-medium text-gray-900">
+                        {startIndex + index + 1}
+                      </td>
+                      <td className="px-3 py-3 text-sm">
+                        <div className="space-y-1">
+                          <div className="text-blue-600 font-medium">
+                            {item.regNo}
+                          </div>
+                          <div className="font-medium text-gray-900">
+                            {item.fullName}
+                          </div>
+                          <div className="text-gray-600">{item.userEmail}</div>
+                          <div className="text-gray-600">{item.userMobile}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-sm text-gray-600">
+                        {item.regDate
+                          ? new Date(item.regDate).toLocaleDateString("en-IN")
+                          : "N/A"}
+                      </td>
+                      <td className="px-3 py-3 text-sm">
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleClick("View", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white hover:bg-blue-600 transition-colors text-xs font-medium"
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleClick("Appt. Letter", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-green-500 text-white hover:bg-green-600 transition-colors text-xs font-medium"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Letter
+                          </button>
+                          <button
+                            onClick={() => handleClick("ID Card", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-purple-500 text-white hover:bg-purple-600 transition-colors text-xs font-medium"
+                          >
+                            <CreditCard className="w-3 h-3 mr-1" />
+                            ID Card
+                          </button>
+                          <button
+                            onClick={() => handleClick("Receipt", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-xs font-medium"
+                          >
+                            <Receipt className="w-3 h-3 mr-1" />
+                            Receipt
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-sm">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleClick("Deactivate", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 transition-colors text-xs font-medium"
+                          >
+                            <UserX className="w-3 h-3 mr-1" />
+                            Deactivate
+                          </button>
+                          <button
+                            onClick={() => handleClick("Block", item)}
+                            className={`inline-flex items-center px-3 py-1.5 transition-colors text-xs font-medium ${
+                              item.accountStatus === "blocked"
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-yellow-500 text-white hover:bg-yellow-600"
+                            }`}
+                            disabled={item.accountStatus === "blocked"}
+                          >
+                            <Shield className="w-3 h-3 mr-1" />
+                            {item.accountStatus === "blocked"
+                              ? "Blocked"
+                              : "Block"}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-sm">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleClick("Edit", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-yellow-500 text-white hover:bg-yellow-600 transition-colors text-xs font-medium"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleClick("Delete", item)}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 transition-colors text-xs font-medium"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          !loading && (
+            <div className="bg-white shadow-lg p-6 text-center">
+              <p className="text-gray-600">No active members found.</p>
+            </div>
+          )
+        )}
+
+        {/* Pagination Section */}
+        {currentData.length > 0 && (
+          <div className="bg-white shadow-lg p-6 mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-gray-600">
+                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                <span className="font-medium">
+                  {endIndex > totalEntries ? totalEntries : endIndex}
+                </span>{" "}
+                of <span className="font-medium">{totalEntries}</span> entries
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleClick("Deactivate", item)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Deactivate
+                  Previous
                 </button>
-
+                <div className="flex items-center gap-1">
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && (
+                        <span className="px-2 text-gray-500">...</span>
+                      )}
+                    </>
+                  )}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    if (pageNumber > 0 && pageNumber <= totalPages) {
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => setCurrentPage(pageNumber)}
+                          className={`px-3 py-2 text-sm transition-colors ${
+                            currentPage === pageNumber
+                              ? "bg-blue-500 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    }
+                    return null;
+                  })}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && (
+                        <span className="px-2 text-gray-500">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
                 <button
-                  onClick={() => handleClick("Block", item)}
-                  className={`${
-                    item.accountStatus === "blocked"
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-yellow-500 hover:bg-yellow-600 text-white"
-                  } px-2 py-0.5 rounded text-xs ml-1`}
-                  disabled={item.accountStatus === "blocked"}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {item.accountStatus === "blocked" ? "Blocked" : "Block"}
+                  Next
                 </button>
-              </td>
+              </div>
+            </div>
+          </div>
+        )}
 
-              <td className="p-1 text-xs gap-1">
+        {showBlockPopup && (
+          <div className="fixed inset-0 z-50  bg-opacity-40 flex items-center justify-center">
+            <div className="bg-white p-6 rounded shadow-lg w-96">
+              <h2 className="text-lg font-semibold mb-4">Block Reason</h2>
+              <textarea
+                rows={4}
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter reason here..."
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+              ></textarea>
+              <div className="mt-4 flex justify-end gap-2">
                 <button
-                  onClick={() => handleClick("Edit", item)}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
+                  onClick={() => {
+                    setShowBlockPopup(false);
+                    setBlockReason("");
+                    setSelectedMember(null);
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
                 >
-                  ✏️
+                  Cancel
                 </button>
                 <button
-                  onClick={() => handleClick("Delete", item)}
-                  className="text-red-500 hover:text-red-700 text-sm"
+                  onClick={async () => {
+                    try {
+                      await axios.patch(
+                        `${API_BASE}/${selectedMember.userId}/block`,
+                        {
+                          reason: blockReason,
+                        }
+                      );
+                      setData((prev) =>
+                        prev.map((user) =>
+                          user.userId === selectedMember.userId
+                            ? { ...user, accountStatus: "blocked" }
+                            : user
+                        )
+                      );
+                      setShowBlockPopup(false);
+                      setBlockReason("");
+                      setSelectedMember(null);
+                    } catch (err) {
+                      console.error("Block failed:", err.message);
+                      alert("Block failed: " + err.message);
+                    }
+                  }}
+                  className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700"
                 >
-                  🗑️
+                  Confirm Block
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Pagination */}
-      <div className="flex justify-center items-center mt-3 gap-2">
-        <span className="text-xs text-gray-600">
-          Showing {startIndex + 1} to{" "}
-          {endIndex > totalEntries ? totalEntries : endIndex} of {totalEntries}{" "}
-          entries
-        </span>
-        <button
-          onClick={() => setCurrentPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-2 py-0.5 border rounded text-xs disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <button className="px-2 py-0.5 bg-blue-500 text-white rounded text-xs">
-          {currentPage}
-        </button>
-        <button
-          onClick={() => setCurrentPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-2 py-0.5 border rounded text-xs disabled:opacity-50"
-        >
-          Next
-        </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

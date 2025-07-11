@@ -182,32 +182,39 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { Download, Printer } from "lucide-react";
 import axios from "axios";
+import { Download } from "lucide-react";
 
 const GenerateIdCard = () => {
   const location = useLocation();
-  const passedMember = location.state; 
-
+  const passedMember = location.state;
   const [userInfo, setUserInfo] = useState(passedMember || null);
   const [qrImage, setQrImage] = useState(null);
   const cardRef = useRef(null);
 
+  // Fetch user info
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!passedMember) {
-          const res = await axios.get("http://localhost:5000/api/v1/auth/my-idcard");
+          const token = localStorage.getItem("token");
+          if (!token) throw new Error("No token found. Please login again.");
+
+          const res = await axios.get("http://localhost:5000/api/v1/idcard/my-idcard", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           setUserInfo(res.data);
         }
       } catch (err) {
-        console.error("Failed to fetch user ID card:", err);
+        console.error("Failed to fetch ID card:", err);
+        alert("Failed to load ID card. Please try logging in again.");
       }
     };
 
     fetchData();
   }, [passedMember]);
 
+  // Generate QR
   useEffect(() => {
     if (userInfo?.uniqueId) {
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${userInfo.uniqueId}`;
@@ -215,114 +222,150 @@ const GenerateIdCard = () => {
     }
   }, [userInfo]);
 
-  const downloadPDF = async () => {
-    const card = cardRef.current;
-    setTimeout(async () => {
-      const canvas = await html2canvas(card, { useCORS: true, scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
+  // Handle PDF generation + upload
+  const handleDownloadAndUploadPDF = async () => {
+    try {
+      if (!cardRef.current) return;
 
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width, canvas.height],
+      const canvas = await html2canvas(cardRef.current);
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = (canvas.height * pageWidth) / canvas.width;
+      pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, pageHeight);
+
+      const fileName = `${userInfo?.uniqueId || "id_card"}.pdf`;
+      pdf.save(fileName);
+
+      const pdfBlob = pdf.output("blob");
+      const formData = new FormData();
+      formData.append("idCardPdf", pdfBlob, fileName);
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication token missing.");
+
+      await axios.post("http://localhost:5000/api/v1/idcard/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-      pdf.save("CIB-ID-Card.pdf");
-    }, 300);
+      alert("ID card uploaded to server successfully!");
+    } catch (error) {
+      console.error("Upload Error:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired or unauthorized. Please login again.");
+      } else {
+        alert("Failed to upload ID card. Please try again.");
+      }
+    }
   };
 
-
   if (!userInfo)
-    return <p className="text-center text-gray-500">Loading ID card...</p>;
+    return <p style={{ textAlign: "center", color: "#6b7280" }}>Loading ID card...</p>;
 
   return (
-    <div className="flex flex-col items-center px-4 py-6">
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px" }}>
       {/* ID Card */}
-      <div ref={cardRef} className="bg-white rounded-lg shadow-2xl w-[90vw] max-w-[350px]">
-        <div className="h-2 bg-gradient-to-r from-red-600 to-blue-600" />
+      <div ref={cardRef} style={{
+        backgroundColor: "#ffffff",
+        borderRadius: "12px",
+        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+        width: "90vw",
+        maxWidth: "350px"
+      }}>
+        <div style={{ height: "8px", background: "linear-gradient(to right, #dc2626, #2563eb)" }} />
 
         {/* Header */}
-        <div className="flex items-center justify-center p-4 bg-white border-b-2 border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-20 h-20 overflow-hidden">
-              <img src="/favicon.ico" alt="CIB Logo" className="w-full h-full object-contain" />
+        <div style={{ display: "flex", justifyContent: "center", padding: "16px", borderBottom: "2px solid #e5e7eb" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "80px", height: "80px", overflow: "hidden" }}>
+              <img src="/favicon.ico" alt="CIB Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
-            <div className="text-center">
-              <h1 className="text-7xl font-black text-red-600" style={{ letterSpacing: '0.6em' }}>
-                CIB
-              </h1>
-              <p className="text-xs font-bold text-blue-800 me-8">
-                CRIME INVESTIGATION BUREAU
-              </p>
-              <p className="text-[9px] text-gray-600 me-8">
-                (An ISO 9001:2015 Certified Organization)
-              </p>
+            <div style={{ textAlign: "center" }}>
+              <h1 style={{ fontSize: "3.5rem", fontWeight: "900", color: "#dc2626", letterSpacing: "0.6em" }}>CIB</h1>
+              <p style={{ fontSize: "12px", fontWeight: "700", color: "#1e3a8a", marginRight: "2rem" }}>CRIME INVESTIGATION BUREAU</p>
+              <p style={{ fontSize: "9px", color: "#6b7280", marginRight: "2rem" }}>(An ISO 9001:2015 Certified Organization)</p>
             </div>
           </div>
         </div>
 
         {/* ID Title */}
-        <div className="bg-red-600 text-white text-center py-2">
-          <h2 className="text-lg font-bold tracking-wide">IDENTITY CARD</h2>
+        <div style={{ backgroundColor: "#dc2626", color: "#ffffff", textAlign: "center", padding: "8px 0" }}>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: "bold" }}>IDENTITY CARD</h2>
         </div>
 
-        {/* Photo and QR */}
-        <div className="flex justify-between items-start p-4 bg-white">
-          <div className="border-2 border-black">
-            <img src={userInfo.photo} alt="Profile" className="w-24 h-32 object-cover" />
+        {/* Photo + QR */}
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "16px" }}>
+          <div style={{ border: "2px solid black" }}>
+            <img src={userInfo.photo} alt="Profile" style={{ width: "96px", height: "128px", objectFit: "cover" }} />
           </div>
-          <div className="border border-black">
+          <div style={{ border: "1px solid black" }}>
             {qrImage ? (
-              <img src={qrImage} alt="QR Code" className="w-20 h-20" />
+              <img src={qrImage} alt="QR Code" style={{ width: "80px", height: "80px" }} />
             ) : (
-              <p className="text-xs p-1">Loading QR...</p>
+              <p style={{ fontSize: "12px", padding: "4px" }}>Loading QR...</p>
             )}
           </div>
         </div>
 
-        {/* Info Section */}
-        <div className="px-4 pb-4 bg-white text-sm">
-          {[
-            "name",
-            "designation",
-            "division",
-            "work",
-            "validTill",
-            "uniqueId",
-            "bloodGroup",
-          ].map((key) => (
-            <div className="flex" key={key}>
-              <span className="w-24 font-medium capitalize">
+        {/* Info */}
+        <div style={{ padding: "0 16px 16px", fontSize: "14px" }}>
+          {["name", "designation", "division", "work", "validTill", "uniqueId", "bloodGroup"].map((key) => (
+            <div style={{ display: "flex" }} key={key}>
+              <span style={{ width: "96px", fontWeight: "500", textTransform: "capitalize" }}>
                 {key.replace(/([A-Z])/g, " $1")}
               </span>
-              <span className="text-black">: {userInfo[key] || "N/A"}</span>
+              <span>: {userInfo[key] || "N/A"}</span>
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="bg-gradient-to-br from-red-600 to-blue-600 px-4 pb-4 space-y-1 text-xs font-medium text-white">
-          <div className="px-3 py-2">● NGO Registration Under Indian Trust Act.</div>
-          <div className="px-3 py-2">● Registration by NITI Aayog under NGO Darpan</div>
-          <div className="px-3 py-2">● Registration by Ministry of MSME under UDYAM</div>
+        <div style={{
+          background: "linear-gradient(to bottom right, #dc2626, #2563eb)",
+          padding: "0 16px 16px",
+          fontSize: "12px",
+          fontWeight: "500",
+          color: "#ffffff"
+        }}>
+          <div style={{ padding: "8px 12px" }}>● NGO Registration Under Indian Trust Act.</div>
+          <div style={{ padding: "8px 12px" }}>● Registration by NITI Aayog under NGO Darpan</div>
+          <div style={{ padding: "8px 12px" }}>● Registration by Ministry of MSME under UDYAM</div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 mt-6">
-        <button
-          onClick={downloadPDF}
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg flex items-center gap-2"
-        >
-          <Download className="w-5 h-5" />
-          Download PDF
-        </button>
-        
-      </div>
+      {/* Button */}
+      <button
+        onClick={handleDownloadAndUploadPDF}
+        style={{
+          marginTop: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          backgroundColor: "#10b981",
+          color: "#ffffff",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+          cursor: "pointer",
+          border: "none",
+          transition: "background-color 0.3s ease"
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#047857")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#10b981")}
+      >
+        <Download size={18} /> Download
+      </button>
     </div>
   );
 };
 
 export default GenerateIdCard;
+
+
+
+
+
 
