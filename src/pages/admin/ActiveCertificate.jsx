@@ -79,12 +79,12 @@ const ActiveCertificate = () => {
     if (!Array.isArray(data)) return [];
     if (!searchTerm) return data;
 
-    return data.filter(item => 
+    return data.filter(item =>
       item &&
       (item.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-       item.email?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-       item.regNo?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-       item.mobile?.toString()?.includes(searchTerm))
+        item.email?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        item.regNo?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        item.mobile?.toString()?.includes(searchTerm))
     );
   }, [data, searchTerm]);
 
@@ -93,11 +93,11 @@ const ActiveCertificate = () => {
     if (!Array.isArray(filteredData)) return [];
 
     if (!sortConfig.key) return filteredData;
-    
+
     return [...filteredData].sort((a, b) => {
       const aValue = a?.[sortConfig.key];
       const bValue = b?.[sortConfig.key];
-      
+
       if (aValue === undefined || bValue === undefined) return 0;
       if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -126,10 +126,10 @@ const ActiveCertificate = () => {
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -153,11 +153,10 @@ const ActiveCertificate = () => {
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`px-3 py-1 border rounded ${
-            i === currentPage
+          className={`px-3 py-1 border rounded ${i === currentPage
               ? 'bg-blue-500 text-white border-blue-500'
               : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           {i}
         </button>
@@ -217,11 +216,11 @@ const ActiveCertificate = () => {
             </select>
             <span className="text-sm text-gray-600">entries per page</span>
           </div>
-          
+
           <button className="bg-slate-700 text-white px-6 py-2 rounded hover:bg-slate-800">
             All Generated Certificate
           </button>
-          
+
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">Search:</span>
             <input
@@ -369,8 +368,8 @@ const ActiveCertificate = () => {
                       {item.verifyDate}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button 
-                        onClick={() => handleSubmit(item)} 
+                      <button
+                        onClick={() => handleSubmit(item)}
                         className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
                       >
                         View
@@ -382,9 +381,13 @@ const ActiveCertificate = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                      <button
+                        onClick={() => navigate('/admin/usercertificatetable', { state: { userId: item.id } })}
+                        className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
+                      >
                         Total {item.totalCertificates}
                       </button>
+
                     </td>
                   </tr>
                 ))
