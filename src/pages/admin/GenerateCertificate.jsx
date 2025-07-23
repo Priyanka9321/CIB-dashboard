@@ -46,8 +46,8 @@ const GenerateCertificate = () => {
   }, []);
 
   const handleSubmit = (member) => {
-    navigate('/admin/memberdetails', { state: { member } });
-  };
+  navigate('/admin/member-details', { state: { member, mode: 'view' } });
+};
 
   const handleGenerateClick = (member) => {
     setSelectedMember(member);
@@ -322,12 +322,13 @@ const GenerateCertificate = () => {
                     {item.verifyDate}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleSubmit(item)}
-                      className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
-                    >
-                      View
-                    </button>
+                   <button
+  onClick={() => handleSubmit({ ...item, userId: item.id })}
+  className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
+>
+  View
+</button>
+
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className="bg-green-500 text-white px-3 py-1 rounded text-xs">

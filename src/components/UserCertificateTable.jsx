@@ -49,55 +49,56 @@ const UserCertificateTable = () => {
   const endIndex = Math.min(startIndex + entriesPerPage, totalEntries);
   const currentEntries = filteredCertificates.slice(startIndex, endIndex);
 
- const handleDelete = async (certificateNo) => {
-  if (!window.confirm("Are you sure you want to hide this certificate?")) return;
+  const handleDelete = async (certificateNo) => {
+    if (!window.confirm("Are you sure you want to hide this certificate?")) return;
 
-  try {
-    await axios.patch(`http://localhost:5000/api/soft-delete/${certificateNo}`);
-    toast.success("Certificate hidden successfully");
+    try {
+      await axios.patch(`http://localhost:5000/api/soft-delete/${certificateNo}`);
+      toast.success("Certificate hidden successfully");
 
-    // Remove from frontend state
-    setCertificates(prev => prev.filter(cert => cert.certificateNo !== certificateNo));
-  } catch (error) {
-    console.error("Error hiding certificate:", error);
-    toast.error("Something went wrong while hiding the certificate.");
-  }
-};
+      // Remove from frontend state
+     setCertificates(prev => prev.filter(cert => cert.certificateNo.toString() !== certificateNo.toString()));
+
+    } catch (error) {
+      console.error("Error hiding certificate:", error);
+      toast.error("Something went wrong while hiding the certificate.");
+    }
+  };
 
 
- const handleDownload = async (certificateNo) => {
-  try {
-    setLoading(true);
-    const response = await axios.get(
-      `http://localhost:5000/api/downloadcertificate/${certificateNo}`,
-      {
-        responseType: 'blob',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using authentication
+  const handleDownload = async (certificateNo) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/downloadcertificate/${certificateNo}`,
+        {
+          responseType: 'blob',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using authentication
+          }
         }
-      }
-    );
+      );
 
-    // Create download link
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `certificate_${certificateNo}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    
-    // Clean up
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-      link.remove();
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `certificate_${certificateNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        link.remove();
+        setLoading(false);
+      }, 100);
+    } catch (err) {
       setLoading(false);
-    }, 100);
-  } catch (err) {
-    setLoading(false);
-    setError(err.response?.data?.message || 'Failed to download certificate');
-    console.error('Download error:', err);
-  }
-};
+      setError(err.response?.data?.message || 'Failed to download certificate');
+      console.error('Download error:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -163,24 +164,24 @@ const UserCertificateTable = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">{cert.fatherName}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{cert.programName}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                     <button
-  onClick={() => handleDownload(cert.certificateNo)}
-  disabled={loading}
-  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
->
-  {loading ? (
-    <span className="inline-block animate-spin">⏳</span>
-  ) : (
-    <>
-      <Download size={14} />
-      <span>Download</span>
-    </>
-  )}
-</button>
+                      <button
+                        onClick={() => handleDownload(cert.certificateNo)}
+                        disabled={loading}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+                      >
+                        {loading ? (
+                          <span className="inline-block animate-spin">⏳</span>
+                        ) : (
+                          <>
+                            <Download size={14} />
+                            <span>Download</span>
+                          </>
+                        )}
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <button
-                         onClick={() => handleDelete(cert.certificateNo)}
+                        onClick={() => handleDelete(cert.certificateNo)}
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
                       >
                         <Trash2 size={14} />

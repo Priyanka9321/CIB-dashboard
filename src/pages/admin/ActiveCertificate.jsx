@@ -71,9 +71,8 @@ const ActiveCertificate = () => {
   }, []);
 
   const handleSubmit = (member) => {
-    navigate('/admin/memberdetails', { state: { member } });
+    navigate('/admin/member-details', { state: { member, mode: 'view' } });
   };
-
   // Filter data based on search
   const filteredData = useMemo(() => {
     if (!Array.isArray(data)) return [];
@@ -154,8 +153,8 @@ const ActiveCertificate = () => {
           key={i}
           onClick={() => handlePageChange(i)}
           className={`px-3 py-1 border rounded ${i === currentPage
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+            ? 'bg-blue-500 text-white border-blue-500'
+            : 'border-gray-300 text-gray-600 hover:bg-gray-100'
             }`}
         >
           {i}
@@ -369,7 +368,7 @@ const ActiveCertificate = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
-                        onClick={() => handleSubmit(item)}
+                        onClick={() => handleSubmit({ ...item, userId: item.id })}
                         className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
                       >
                         View

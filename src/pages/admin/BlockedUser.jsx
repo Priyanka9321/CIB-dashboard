@@ -1,215 +1,5 @@
-// import React, { useState } from 'react';
-
-// const BlockUser = () => {
-//   const initialData = [
-//     {
-//       srNo: 1,
-//       regNo: "MBR-498",
-//       name: "RAMESH KADAM",
-//       email: "rameshkadamstar1974@gmail.com",
-//       mobile: "8796636861",
-//       blockingDate: "06-06-2025",
-//       status: "Blocked",
-//       reason: "Ok",
-//       blockedBy: "Admin",
-//     },
-//     {
-//       srNo: 2,
-//       regNo: "MBR-447",
-//       name: "Irshad",
-//       email: "irshadvfv@gmail.com",
-//       mobile: "99666463199",
-//       blockingDate: "29-05-2025",
-//       status: "Blocked",
-//       reason: "6",
-//       blockedBy: "Admin",
-//     },
-//   ];
-
-//   const [data, setData] = useState(initialData);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [entriesPerPage, setEntriesPerPage] = useState(10);
-//   const [searchTerm, setSearchTerm] = useState("");
-
-//   const handleSearch = (e) => {
-//     const term = e.target.value.toLowerCase();
-//     setSearchTerm(term);
-//     const filtered = initialData.filter(
-//       (item) =>
-//         item.regNo.toLowerCase().includes(term) ||
-//         item.name.toLowerCase().includes(term) ||
-//         item.email.toLowerCase().includes(term)
-//     );
-//     setData(filtered);
-//     setCurrentPage(1);
-//   };
-
-//   const handleEntriesChange = (e) => {
-//     setEntriesPerPage(Number(e.target.value));
-//     setCurrentPage(1);
-//   };
-
-//   const handleUnblock = (item) => {
-//     const updatedData = data.map((dataItem) =>
-//       dataItem.srNo === item.srNo ? { ...dataItem, status: "Active" } : dataItem
-//     );
-//     setData(updatedData);
-//   };
-
-//   const totalEntries = data.length;
-//   const totalPages = Math.ceil(totalEntries / entriesPerPage);
-//   const startIndex = (currentPage - 1) * entriesPerPage;
-//   const endIndex = startIndex + entriesPerPage;
-//   const currentData = data.slice(startIndex, endIndex);
-
-//   return (
-//     <div className="p-4 max-w-full mx-auto">
-//       {/* Header */}
-//       <div className="flex justify-between items-center mb-4">
-//         <div className="flex items-center">
-//           <select
-//             value={entriesPerPage}
-//             onChange={handleEntriesChange}
-//             className="border border-gray-300 rounded p-1 text-sm bg-white"
-//           >
-//             <option value={10}>10</option>
-//             <option value={25}>25</option>
-//             <option value={50}>50</option>
-//             <option value={100}>100</option>
-//           </select>
-//           <span className="ml-2 text-sm text-gray-600">entries per page</span>
-//         </div>
-//         <h2 className="text-lg font-bold text-gray-800">All Block User Data</h2>
-//         <div className="flex items-center">
-//           <label className="mr-2 text-sm text-gray-600">Search:</label>
-//           <input
-//             type="text"
-//             placeholder="Enter as Id No. Name Email Id"
-//             value={searchTerm}
-//             onChange={handleSearch}
-//             className="border border-gray-300 rounded p-1 text-sm w-48"
-//           />
-//         </div>
-//       </div>
-
-//       {/* Table */}
-//       <div className="border rounded">
-//         <table className="w-full border-collapse">
-//           <thead className="bg-gray-100 border-b">
-//             <tr>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Sr.No.</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Reg.No / Name / Email / Mobile</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Blocking Date</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Details</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Status</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Reason</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Block By</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700">Action</th>
-//               <th className="p-2 text-left text-sm font-semibold text-gray-700"></th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {currentData.map((item, index) => (
-//               <tr
-//                 key={item.srNo}
-//                 className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-//               >
-//                 <td className="p-2 text-sm text-gray-600">{item.srNo}</td>
-//                 <td className="p-2 text-sm text-gray-600">
-//                   {item.regNo} / {item.name} / {item.email} / {item.mobile}
-//                 </td>
-//                 <td className="p-2 text-sm text-gray-600">{item.blockingDate}</td>
-//                 <td className="p-2 text-sm">
-//                   <button className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
-//                     View
-//                   </button>
-//                 </td>
-//                 <td className="p-2 text-sm">
-//                   <span
-//                     className={`px-3 py-1 rounded ${
-//                       item.status === "Blocked"
-//                         ? "bg-red-500 text-white"
-//                         : "bg-green-100 text-green-700"
-//                     }`}
-//                   >
-//                     {item.status}
-//                   </span>
-//                 </td>
-//                 <td className="p-2 text-sm text-gray-600">{item.reason}</td>
-//                 <td className="p-2 text-sm">
-//                   <span className="bg-green-500 text-white px-3 py-1 rounded">
-//                     {item.blockedBy}
-//                   </span>
-//                 </td>
-//                 <td className="p-2 text-sm">
-//                   {item.status === "Blocked" ? (
-//                     <button
-//                       onClick={() => handleUnblock(item)}
-//                       className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-//                     >
-//                       Unblock
-//                     </button>
-//                   ) : (
-//                     <button
-//                       onClick={() => handleUnblock(item)}
-//                       className="bg-gray-300 text-gray-700 px-3 py-1 rounded cursor-not-allowed"
-//                       disabled
-//                     >
-//                       Unblock
-//                     </button>
-//                   )}
-//                 </td>
-//                 <td className="p-2 text-sm flex gap-1">
-//                   <button className="text-gray-500 hover:text-gray-700">✏️</button>
-//                   <button className="text-gray-500 hover:text-gray-700">🗑️</button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-
-//       {/* Pagination */}
-//       <div className="flex justify-center items-center mt-4 gap-2">
-//         <span className="text-sm text-gray-600">
-//           Showing {startIndex + 1} to{" "}
-//           {endIndex > totalEntries ? totalEntries : endIndex} of {totalEntries} entries
-//         </span>
-//         <button
-//           onClick={() => setCurrentPage(currentPage - 1)}
-//           disabled={currentPage === 1}
-//           className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-//         >
-//           Previous
-//         </button>
-//         <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm">
-//           {currentPage}
-//         </button>
-//         <button
-//           onClick={() => setCurrentPage(currentPage + 1)}
-//           disabled={currentPage === totalPages}
-//           className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-//         >
-//           Next
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BlockUser;
-
-// updated by sumit 
-
-
 import React, { useEffect, useState } from "react";
-import { 
-  Search, 
-  Users, 
-  Filter, 
-  UserX, 
-  Shield 
-} from 'lucide-react';
+import { Search, Filter, UserX, Shield, Lock, Unlock } from 'lucide-react';
 
 const BlockUser = () => {
   const [data, setData] = useState([]);
@@ -219,27 +9,37 @@ const BlockUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [blockReason, setBlockReason] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  // Fetch blocked users from backend
-  useEffect(() => {
-    const fetchBlockedUsers = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await fetch("http://localhost:5000/api/v1/members/blocked");
-        const result = await response.json();
-        setData(result);
-        setFilteredData(result);
-      } catch (error) {
-        setError("Failed to fetch blocked users");
-        console.error("Failed to fetch blocked users:", error);
-      } finally {
-        setLoading(false);
+  // Fetch all users from backend
+ useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch("http://localhost:5000/api/v1/members");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const result = await response.json();
 
-    fetchBlockedUsers();
-  }, []);
+      // ✅ Filter only blocked users
+      const blockedUsers = result.filter(user => !user.isActive || user.status === 'blocked');
+
+      setData(blockedUsers);
+      setFilteredData(blockedUsers);
+    } catch (error) {
+      setError("Failed to fetch users");
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUsers();
+}, []);
+
 
   // Handle Search
   const handleSearch = (e) => {
@@ -261,23 +61,78 @@ const BlockUser = () => {
     setCurrentPage(1);
   };
 
-  const handleUnblock = async (item) => {
-    const confirmUnblock = window.confirm(
-      `Are you sure you want to unblock ${item.fullName}?`
-    );
-    if (!confirmUnblock) return;
+  // Block User Function
+ const handleBlock = async (user) => {
+  if (!blockReason.trim()) {
+    alert("Please enter a reason for blocking");
+    return;
+  }
 
-    try {
-      await fetch(`http://localhost:5000/api/v1/members/${item.userId}/activate`, {
-        method: 'PATCH'
-      });
-      const updated = filteredData.filter((dataItem) => dataItem.userId !== item.userId);
-      setFilteredData(updated);
-      setData(prev => prev.filter((dataItem) => dataItem.userId !== item.userId));
-    } catch (err) {
-      console.error("Failed to unblock user:", err);
+  try {
+    const response = await fetch(`http://localhost:5000/api/v1/members/${user.userId}/block`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        reason: blockReason
+        
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const result = await response.json();
+
+    // Update UI
+    const updatedData = data.map(item =>
+      item.userId === user.userId
+        ? { ...item, status: "Blocked", reason: blockReason, blockedBy: "Admin" }
+        : item
+    );
+
+    setData(updatedData);
+    setFilteredData(updatedData);
+    setBlockReason("");
+    setSelectedUser(null);
+    alert(`Successfully blocked ${user.fullName}`);
+  } catch (err) {
+    console.error("Failed to block user:", err);
+    alert(`Failed to block user: ${err.message}`);
+  }
+};
+
+
+
+  // Unblock User Function
+ const handleUnblock = async (user) => {
+  try {
+    const response = await fetch(`http://localhost:5000/api/v1/members/${user.userId}/activate`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ isActive: true }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // ✅ Remove user from the UI after unblocking
+    const updatedData = data.filter(item => item.userId !== user.userId);
+    setData(updatedData);
+    setFilteredData(updatedData);
+
+    alert(`Successfully unblocked ${user.fullName}`);
+  } catch (err) {
+    console.error("Failed to unblock user:", err);
+    alert(`Failed to unblock user: ${err.message}`);
+  }
+};
+
 
   // Pagination
   const totalEntries = filteredData.length;
@@ -297,8 +152,8 @@ const BlockUser = () => {
                 <UserX className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">All Block User Data</h1>
-                <p className="text-gray-600 text-sm">Manage and view all blocked user accounts</p>
+                <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+                <p className="text-gray-600 text-sm">Manage and view all user accounts</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -329,10 +184,43 @@ const BlockUser = () => {
           </div>
         </div>
 
+        {/* Block Reason Modal */}
+        {selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-medium mb-4">Block {selectedUser.fullName}</h3>
+              <textarea
+                className="w-full p-2 border border-gray-300 rounded mb-4"
+                rows="4"
+                placeholder="Enter reason for blocking..."
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedUser(null);
+                    setBlockReason("");
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleBlock(selectedUser)}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Confirm Block
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="bg-white shadow-lg p-6 text-center">
-            <p className="text-gray-600">Loading blocked users...</p>
+            <p className="text-gray-600">Loading users...</p>
           </div>
         )}
 
@@ -344,6 +232,20 @@ const BlockUser = () => {
         )}
 
         {/* Table Section */}
+               {loading && (
+          <div className="bg-white shadow-lg p-6 text-center">
+            <p className="text-gray-600">Loading users...</p>
+          </div>
+        )}
+
+        {/* Error Message - keep exactly as is */}
+        {error && (
+          <div className="bg-red-100 text-red-800 p-4 mb-6 rounded">
+            {error}
+          </div>
+        )}
+
+        {/* Table Section - UPDATED to match screenshot */}
         {currentData.length > 0 ? (
           <div className="bg-white shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
@@ -386,11 +288,13 @@ const BlockUser = () => {
                           : "N/A"}
                       </td>
                       <td className="px-3 py-3 text-sm text-gray-600">
-                        {item.details || 'N/A'}
+                        <button className="text-blue-500 hover:underline">View</button>
                       </td>
                       <td className="px-3 py-3 text-sm">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          {item.status || 'Blocked'}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          item.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.isActive ? 'Active' : 'Blocked'}
                         </span>
                       </td>
                       <td className="px-3 py-3 text-sm text-gray-600">
@@ -401,13 +305,23 @@ const BlockUser = () => {
                       </td>
                       <td className="px-3 py-3 text-sm">
                         <div className="flex items-center justify-center">
-                          <button
-                            onClick={() => handleUnblock(item)}
-                            className="inline-flex items-center px-3 py-1 bg-green-500 text-white hover:bg-green-600 transition-colors text-xs font-medium rounded"
-                          >
-                            <Shield className="w-3 h-3 mr-1" />
-                            Unblock
-                          </button>
+                          {item.isActive ? (
+                            <button
+                              onClick={() => setSelectedUser(item)}
+                              className="inline-flex items-center px-3 py-1 bg-red-500 text-white hover:bg-red-600 transition-colors text-xs font-medium rounded"
+                            >
+                              <Lock className="w-3 h-3 mr-1" />
+                              Block
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleUnblock(item)}
+                              className="inline-flex items-center px-3 py-1 bg-green-500 text-white hover:bg-green-600 transition-colors text-xs font-medium rounded"
+                            >
+                              <Unlock className="w-3 h-3 mr-1" />
+                              Unblock
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-3 py-3 text-sm">
@@ -432,7 +346,6 @@ const BlockUser = () => {
             </div>
           )
         )}
-
         {/* Pagination Section */}
         {totalEntries > 0 && (
           <div className="bg-white shadow-lg p-4 mt-6">
@@ -449,54 +362,17 @@ const BlockUser = () => {
                   Previous
                 </button>
                 <div className="flex items-center gap-1">
-                  {currentPage > 3 && (
-                    <>
-                      <button
-                        onClick={() => setCurrentPage(1)}
-                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        1
-                      </button>
-                      {currentPage > 4 && <span className="px-2 text-gray-500">...</span>}
-                    </>
-                  )}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNumber;
-                    if (totalPages <= 5) {
-                      pageNumber = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNumber = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNumber = totalPages - 4 + i;
-                    } else {
-                      pageNumber = currentPage - 2 + i;
-                    }
-                    if (pageNumber > 0 && pageNumber <= totalPages) {
-                      return (
-                        <button
-                          key={pageNumber}
-                          onClick={() => setCurrentPage(pageNumber)}
-                          className={`px-3 py-2 text-sm transition-colors ${
-                            currentPage === pageNumber ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {pageNumber}
-                        </button>
-                      );
-                    }
-                    return null;
-                  })}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && <span className="px-2 text-gray-500">...</span>}
-                      <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-2 text-sm transition-colors ${
+                        currentPage === i + 1 ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
                 </div>
                 <button
                   onClick={() => setCurrentPage(currentPage + 1)}

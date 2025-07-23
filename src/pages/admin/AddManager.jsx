@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { User, Mail, Phone, Lock, Upload, UserPlus, Shield } from "lucide-react";
+import axios from 'axios';
 
 const AddManager = () => {
   const [formData, setFormData] = useState({
@@ -28,10 +29,39 @@ const AddManager = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Manager appointment data:', formData);
-    // Handle form submission here
+
+    const form = new FormData();
+    form.append('name', formData.name);
+    form.append('email', formData.email);
+    form.append('mobile', formData.mobile);
+    form.append('password', formData.password);
+    if (formData.profilePic) {
+      form.append('profile_pic', formData.profilePic); // this must match field name in backend
+    }
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/managers', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      alert(res.data.message || 'Manager added successfully');
+      // Optionally reset form
+      setFormData({
+        name: '',
+        email: '',
+        mobile: '',
+        password: '',
+        profilePic: null
+      });
+    } catch (error) {
+      const errMsg = error.response?.data?.message || 'Something went wrong';
+      alert(errMsg);
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
@@ -43,14 +73,14 @@ const AddManager = () => {
             {/* Decorative circles */}
             <div className="absolute top-0 left-0 w-20 h-20 bg-white/10 rounded-full -translate-x-10 -translate-y-10"></div>
             <div className="absolute bottom-0 right-0 w-16 h-16 bg-white/10 rounded-full translate-x-8 translate-y-8"></div>
-            
+
             {/* Logo placeholder - circular with icon */}
             <div className="w-20 h-20 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-lg relative z-10">
               <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
                 <Shield className="w-8 h-8 text-white" />
               </div>
             </div>
-            
+
             <h1 className="text-2xl font-bold text-white mb-2">Appoint New Manager</h1>
             <p className="text-blue-100">Create a new manager account</p>
           </div>
@@ -161,27 +191,32 @@ const AddManager = () => {
                 <Upload className="w-4 h-4 text-blue-500" />
                 Manager Profile Pic.
               </label>
+
               <div className="relative">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200 cursor-pointer">
+
+                <label
+                  htmlFor="profilePic"
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200 cursor-pointer block"
+                >
                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                  <label className="cursor-pointer">
-                    <span className="text-blue-600 hover:text-blue-700 font-medium">
-                      Choose File
-                    </span>
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-gray-500 ml-2">
+                  <span className="text-blue-600 hover:text-blue-700 font-medium">
+                    Choose File
+                  </span>
+                  <input
+                    id="profilePic"
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <span className="text-gray-500 ml-2 block">
                     {formData.profilePic ? formData.profilePic.name : "No file chosen"}
                   </span>
                   <p className="text-xs text-gray-400 mt-2">PNG, JPG up to 5MB</p>
-                </div>
+                </label>
               </div>
             </div>
+
 
             {/* Submit Button */}
             <button
